@@ -41,6 +41,25 @@ const registerUser = async (req, res) => {
 
         await newUser.save();
 
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({ message: 'JWT_SECRET is not defined in environment variables' });
+        }
+
+        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+            expiresIn: '10d',
+        });
+
+        if (!token) {
+            return res.status(500).json({ message: 'Error generating token' });
+        }
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+
         res.status(201).json({ message: 'User registered successfully'});
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -62,6 +81,17 @@ const loginUser = async(req,res) =>{
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '10d',
+        });
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
 
         res.status(200).json({'message': "LOGIN SUCCESSFUL"});
     }

@@ -10,4 +10,28 @@ const getMessages = async (req, res) => {
     }
 };
 
-module.exports = { getMessages };
+const joinRoom = async (req, res) => {
+    const { roomId, username } = req.body;
+    res.json({ success: true, message: `Joined room: ${roomId} as ${username}` });
+};
+
+const sendMessage = async (req, res) => {
+    const { roomId, chatId, senderId, receiverId, message } = req.body;
+
+    try {
+        const newMessage = new Chat({
+            roomId,
+            chatId,
+            senderId,
+            receiverId,
+            message
+        });
+        await newMessage.save();
+        res.status(201).json({ success: true, message: 'Message sent', data: newMessage });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+module.exports = { getMessages, joinRoom, sendMessage };

@@ -33,5 +33,29 @@ const sendMessage = async (req, res) => {
     }
 };
 
+const updateMessageStatus = async (req, res) => {
+    const { chatId, statusField, statusValue } = req.body;
 
-module.exports = { getMessages, joinRoom, sendMessage };
+    try {
+        const validFields = ['isRead', 'isDeleted', 'isDelivered', 'isTyping', 'isOnline'];
+        if (!validFields.includes(statusField)) {
+            return res.status(400).json({ success: false, message: 'Invalid status field' });
+        }
+
+        const message = await Chat.findOneAndUpdate(
+            { chatId },
+            { [statusField]: statusValue },
+            { new: true }
+        );
+
+        if (!message) {
+            return res.status(404).json({ success: false, message: 'Message not found' });
+        }
+
+        res.json({ success: true, message: 'Message status updated', data: message });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+module.exports = { getMessages, joinRoom, sendMessage, updateMessageStatus };

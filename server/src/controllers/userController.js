@@ -18,7 +18,7 @@ const getUser = async (req, res) => {
   }
 }
 const registerUser = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { name, email, password } = req.body;
   
     try {
       const existingUser = await User.findOne({ email });
@@ -31,7 +31,7 @@ const registerUser = async (req, res) => {
         return res.status(500).json({ message: 'Error hashing password' });
       }
       const newUser = new User({
-        username,
+        name,
         email,
         password: hashedPassword,
       });
@@ -75,11 +75,31 @@ const registerUser = async (req, res) => {
       }
   }
 
+const updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { name, email, profilePicture } = req.body;
+  
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { name, email, profilePicture },
+        { new: true }
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error });
+    }
+  }
 
 const userController = {
     getUser,
     registerUser,
-    loginUser
+    loginUser,
+    updateUser
 };
 
 module.exports = userController;

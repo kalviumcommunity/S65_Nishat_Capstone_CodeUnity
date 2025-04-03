@@ -3,16 +3,21 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 app.use(cors());    
 app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 app.use('/api/users', userRoutes);
 app.use('/api/chats', chatRoutes);
 const server = http.createServer(app);
+
 const io = new Server(server, {
     cors: {
         origin: '*',

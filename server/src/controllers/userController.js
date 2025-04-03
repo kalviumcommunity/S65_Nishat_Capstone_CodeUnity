@@ -46,7 +46,7 @@ const registerUser = async (req, res) => {
         }
 
         const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-            expiresIn: '10d',
+            expiresIn: '1d',
         });
 
         if (!token) {
@@ -83,7 +83,7 @@ const loginUser = async(req,res) =>{
         }
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '10d',
+            expiresIn: '1d',
         });
 
         res.cookie("token", token, {
@@ -93,7 +93,7 @@ const loginUser = async(req,res) =>{
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
-        res.status(200).json({'message': "LOGIN SUCCESSFUL"});
+        res.status(200).json({message: "LOGIN SUCCESSFUL"});
     }
     catch (error) {
         res.status(500).json({ message: 'Server error', error });

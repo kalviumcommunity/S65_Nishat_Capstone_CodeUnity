@@ -6,6 +6,7 @@ CodeUnity is a real-time collaborative code editor designed to streamline the de
 ## Deployed Links
 
 #### Backend Deployment Link - https://s65-nishat-capstone-codeunity.onrender.com
+#### Frontend Deployment Link - https://s65-nishat-capstone-code-unity.vercel.app/
 
 
 ### Target Users

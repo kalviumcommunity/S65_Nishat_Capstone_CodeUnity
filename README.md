@@ -3,6 +3,11 @@
 
 CodeUnity is a real-time collaborative code editor designed to streamline the development process by enabling seamless code sharing and collaborative editing. With real-time synchronization and a built-in drawing pad, CodeUnity empowers teams to code together, share ideas, and create efficiently.
 
+## Deployed Links
+
+#### Backend Deployment Link - https://s65-nishat-capstone-codeunity.onrender.com
+
+
 ### Target Users
 1. Developers & Development Teams: Collaborate on projects and share code seamlessly.
 

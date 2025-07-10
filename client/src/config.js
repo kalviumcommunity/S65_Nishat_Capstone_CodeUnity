@@ -1,6 +1,6 @@
 const config = {
   backendUrl: import.meta.env.PROD 
-    ? 'https://cu-669q.onrender.com'
+    ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
     : 'http://localhost:8080',
   frontendUrl: import.meta.env.PROD
     ? 'https://cu-sandy.vercel.app'

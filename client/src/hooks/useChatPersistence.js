@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const BACKEND_URL = import.meta.env.PROD 
-  ? 'https://cu-669q.onrender.com'
+  ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
   : 'http://localhost:8080';
 
 // Generate a unique session ID for the current browser session

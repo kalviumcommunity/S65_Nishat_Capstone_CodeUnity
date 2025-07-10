@@ -5,7 +5,7 @@ import Home from './pages/Home';
 import Editor from './pages/Editor';
 
 const BACKEND_URL = import.meta.env.PROD 
-  ? 'https://cu-669q.onrender.com'
+  ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
   : 'http://localhost:8080';
 
 const socket = io(BACKEND_URL);

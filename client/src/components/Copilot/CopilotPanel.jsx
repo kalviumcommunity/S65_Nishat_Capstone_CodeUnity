@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useChatPersistence } from '../../hooks/useChatPersistence';
 
 const BACKEND_URL = import.meta.env.PROD 
-  ? 'https://cu-669q.onrender.com'
+  ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
   : 'http://localhost:8080';
 
 // Maximum number of chat messages to store (to prevent localStorage from getting too large)

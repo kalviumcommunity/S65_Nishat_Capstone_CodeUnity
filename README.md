@@ -80,7 +80,7 @@
 ## 🚀 Deployment
 
 CodeUnity is currently live and can be accessed here:  
-🔗 **Frontend**: [https://s65-nishat-capstone-code-unity.vercel.app/](https://s65-nishat-capstone-code-unity.vercel.app/)
+🔗 **Frontend**: [https://s65-nishat-capstone-code-unity.vercel.app/](https://cunity.vercel.app/)
 
 > *(Backend and code execution service are self-hosted and containerized.)*
 

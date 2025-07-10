@@ -19,7 +19,7 @@ import { FaShare, FaCopy, FaEnvelope, FaCheck, FaTimes, FaFolder, FaUsers, FaPai
 import { FiPlus } from 'react-icons/fi';
 
 const BACKEND_URL = import.meta.env.PROD 
-  ? 'https://cu-669q.onrender.com'
+  ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
   : 'http://localhost:8080';
 
 // Add this helper function at the top of your file

@@ -15,7 +15,6 @@
 ## 🎯 Target Users
 
 - 👨‍💻 **Developers & Development Teams**: Collaborate on codebases and projects in real-time.
-- 🌍 **Open Source Contributors**: Contribute to global projects with live peer collaboration.
 - 🎓 **Students & Educators**: Conduct coding sessions, share exercises, and receive real-time feedback.
 - 🚀 **Freelancers & Entrepreneurs**: Present ideas and build products with clients collaboratively.
 

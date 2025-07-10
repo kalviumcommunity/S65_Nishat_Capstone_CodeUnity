@@ -1,164 +1,87 @@
-# CodeUnity: Real-Time Collaborative Coding Platform
-## Project Overview
+# 🧑‍💻 CodeUnity: Real-Time Collaborative Coding Platform
 
-CodeUnity is a real-time collaborative code editor designed to streamline the development process by enabling seamless code sharing and collaborative editing. With real-time synchronization and a built-in drawing pad, CodeUnity empowers teams to code together, share ideas, and create efficiently.
+[🌐 Live Demo](https://cunity.vercel.app/)
 
-## Deployed Links
+> “CodeUnity empowers real-time collaboration and creativity—enabling developers to build, learn, and grow together.”
 
-#### Frontend Deployment Link - https://s65-nishat-capstone-code-unity.vercel.app/
+---
 
+## 📘 Overview
 
-### Target Users
-1. Developers & Development Teams: Collaborate on projects and share code seamlessly.
+**CodeUnity** is a real-time collaborative code editor designed to streamline the development process by enabling seamless code sharing and collaborative editing. With real-time synchronization, live chat, and a built-in drawing pad, CodeUnity empowers teams to code together, share ideas visually, and create efficiently—all within a single platform.
 
-2. Open Source Contributors: Work on community projects with contributors worldwide.
+---
 
-3. Students & Educators: Share coding exercises and learn together in real-time.
+## 🎯 Target Users
 
-4. Freelancers & Entrepreneurs: Collaborate with clients and colleagues in a single workspace.
+- 👨‍💻 **Developers & Development Teams**: Collaborate on codebases and projects in real-time.
+- 🎓 **Students & Educators**: Conduct coding sessions, share exercises, and receive real-time feedback.
+- 🚀 **Freelancers & Entrepreneurs**: Present ideas and build products with clients collaboratively.
 
-### Benefits
-1. Real-Time Collaboration: Edit and see code changes instantly.
+---
 
-2. Built-In Drawing Pad: Visualize code structure and flow directly in the editor.
+## 🌟 Benefits
 
-3. Instant Feedback: Share ideas, ask questions, and leave comments in real time.
+- ⚡ **Real-Time Collaboration**: Collaborators can edit the same file simultaneously and see changes instantly.
+- 🎨 **Built-In Drawing Pad**: Visually design flowcharts, wireframes, and algorithms inside the platform.
+- 💬 **Instant Feedback**: Discuss and iterate on ideas quickly using integrated live chat and commenting.
+- 🔌 **Seamless Integration**: Works smoothly with existing codebases and development workflows.
+- 🔒 **Security First**: User authentication is powered by robust JWT and OAuth protocols.
 
-4. Seamless Integration: Easy integration with existing codebases and development tools.
+---
 
-5. Security: Secure authentication with JWT and OAuth for safe collaboration.
+## 🛠️ Features
 
-### Features
-- Real-Time Code Editing: Collaborate with multiple team members instantly.
+| 🧩 Feature                   | 💡 Description                                                                 |
+|-----------------------------|------------------------------------------------------------------------------|
+| ✍️ Real-Time Code Editing    | Synchronously code with multiple users—instant updates and smooth experience. |
+| 💬 Live Chat                | In-built messaging system to communicate during sessions.                    |
+| 🎨 Collaborative Drawing Pad| Draw diagrams, architecture, or pseudocode collaboratively.                  |
+| 🌈 Syntax Highlighting      | Multi-language support with syntax-aware formatting.                        |
+| 📂 Project/File Management  | Organize code into projects and structured folders.                         |
+| 🖥️ Code Execution           | Run code in an isolated environment (powered by Docker).                    |
+| 🔒 Secure Authentication    | Role-based access via JWT & OAuth strategies.                              |
+| 🧪 Testable & Extendable    | Built with testing and scalability in mind.                                 |
 
-- Live Chat: Chat about changes in real-time.
+---
 
-- Collaborative Drawing Pad: A visual tool to draw diagrams and flowcharts during coding sessions.
+## 🧱 Tech Stack
 
-- Code Highlighting & Syntax Support: Supports multiple programming languages with code formatting.
+### ⚙️ Frontend
+- **React.js**
+- **Redux** for state management
+- **Tailwind CSS** for modern, responsive UI
 
-- Project & File Management: Easily manage and organize your code files.
+### 🔧 Backend
+- **Node.js**
+- **Express.js**
 
-- Code Execution: Run code directly within the editor (with support for multiple languages).
+### 🗄️ Database
+- **MongoDB**
 
-### Tech Stack
-- Frontend: React.js, Redux, Tailwindcss
+### 🔐 Authentication
+- **JWT (JSON Web Tokens)**
+- **OAuth (Google/Third-party logins)**
 
-- Backend: Node.js, Express.js
+### 📡 Real-Time Communication
+- **WebSockets** (Socket.IO)
 
-- Database: MongoDB
+### 🐳 Code Execution
+- **Piston API** for running code securely in isolated environments
 
-- Authentication: JWT & OAuth
+### 🧪 Testing
+- **Jest**
 
-- Real-Time Communication: WebSockets
+### 🔁 Version Control
+- **Git & GitHub**
 
-- Code Execution: Docker for isolated environments
+---
 
-- Version Control: GitHub
+## 🚀 Deployment
 
-- Testing: Jest
+CodeUnity is currently live and can be accessed here:  
+🔗 **Frontend**: [https://s65-nishat-capstone-code-unity.vercel.app/](https://s65-nishat-capstone-code-unity.vercel.app/)
 
-### Project Timeline (50 Days)
-#### Week 1: Project Setup & Planning (5 days)
-- Day 1: Finalize project idea and name
+> *(Backend and code execution service are self-hosted and containerized.)*
 
-- Day 2: Design low-fidelity wireframes
-
-- Day 3: Create high-fidelity UI mockups
-
-- Day 4: Set up GitHub repository (README, issues, project board)
-
-- Day 5: Plan database schema
-
-#### Week 2: Backend Development (7 days)
-- Day 6-7: Set up backend server and folder structure
-
-- Day 8-9: Implement database schema and test CRUD operations
-
-- Day 10: Create API routes
-
-- Day 11: Implement authentication using username/password
-
-- Day 12: Add JWT authentication and test API
-
-#### Week 3: Frontend Development (7 days)
-- Day 13: Initialize React app and set up folder structure
-
-- Day 14-15: Build core components
-
-- Day 16: Finish Editor code and start with Drawing pad integration
-
-- Day 17: Connect frontend to backend (API integration)
-
-- Day 18-19: Style components to match high-fidelity designs
-
-#### Week 4: Feature Enhancements (7 days)
-- Day 20: Implement drawing pad features
-
-- Day 21: Integrate Google Authentication (OAuth)
-
-- Day 22-23: Try animations and frameworks for better design
-
-- Day 24-25: Set up final design
-
-- Day 26: Test complete user flows 
-
-#### Buffer Days (10 days)
-- Reserved for handling unexpected bugs, delays, or implementing additional features.
-
-
-
-### Installation & Setup
-#### Prerequisites
-Ensure you have the following installed:
-
-- Node.js & npm
-
-- MongoDB
-
-- Git
-
-### Steps to Run the Project
-1. Clone the repository:
-
-git clone https://github.com/yourusername/CodeUnity.git  
-cd CodeUnity  
-
-2. Backend Setup:
-
-- cd server  
-- npm install  
-- npm run dev  
-
-3. Frontend Setup:
-
-- cd client  
-- npm install  
-- npm run dev  
-
-4. Database Setup:
-
-- Ensure MongoDB is running
-
-- Update the .env file with the database connection details
-
-### Contribution Guidelines
-1. Fork the repository
-
-2. Create a feature branch:
-
-git checkout -b feature-name
-
-3. Commit changes:
-
-git commit -m "Added new feature"  
-
-4. Push to the branch:
-
-git push origin feature-name  
-
-5. Open a Pull Request
-
-### Contact
-- For any questions, reach out at: nishataub702@gmail.com
-
+---

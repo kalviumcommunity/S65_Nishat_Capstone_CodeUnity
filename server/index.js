@@ -293,446 +293,446 @@ const io = new Server(server, {
   reconnectionDelayMax: 5000,
 });
 
-// // Track active rooms and their file lists
-// const usersInRoom = {};
-// const rooms = new Map();
-// const roomFiles = new Map();
+// Track active rooms and their file lists
+const usersInRoom = {};
+const rooms = new Map();
+const roomFiles = new Map();
 
-// io.on('connection', (socket) => {
-//   console.log('User connected:', socket.id);
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
 
-//   socket.on('join-room', async (data) => {
-//     // Handle both formats: string roomId or object with roomId
-//     const roomId = typeof data === 'string' ? data : data.roomId;
-//     const username = typeof data === 'object' ? data.username : `User-${socket.id.slice(0, 4)}`;
-//     const isTldrawConnection = typeof data === 'object' ? data.isTldrawConnection : false;
+  socket.on('join-room', async (data) => {
+    // Handle both formats: string roomId or object with roomId
+    const roomId = typeof data === 'string' ? data : data.roomId;
+    const username = typeof data === 'object' ? data.username : `User-${socket.id.slice(0, 4)}`;
+    const isTldrawConnection = typeof data === 'object' ? data.isTldrawConnection : false;
     
-//     // FIXED: Prevent duplicate joins
-//     if (socket.roomId === roomId) {
-//       console.log('🔄 User already in room:', roomId);
-//       return;
-//     }
+    // FIXED: Prevent duplicate joins
+    if (socket.roomId === roomId) {
+      console.log('🔄 User already in room:', roomId);
+      return;
+    }
     
-//     console.log(`🚪 Join room: ${roomId} by ${username} (${socket.id}) ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
+    console.log(`🚪 Join room: ${roomId} by ${username} (${socket.id}) ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
     
-//     socket.join(roomId);
-//     socket.username = username;
-//     socket.roomId = roomId;
-//     socket.isTldrawConnection = isTldrawConnection;
+    socket.join(roomId);
+    socket.username = username;
+    socket.roomId = roomId;
+    socket.isTldrawConnection = isTldrawConnection;
 
-//     if (!usersInRoom[roomId]) {
-//       usersInRoom[roomId] = [];
-//     }
+    if (!usersInRoom[roomId]) {
+      usersInRoom[roomId] = [];
+    }
 
-//     // FIXED: Only add main connections to user list, not TlDraw connections
-//     if (!isTldrawConnection) {
-//       const existingUser = usersInRoom[roomId].find(u => u.socketId === socket.id);
-//       if (!existingUser) {
-//         usersInRoom[roomId].push({ socketId: socket.id, username });
-//       }
-//     }
+    // FIXED: Only add main connections to user list, not TlDraw connections
+    if (!isTldrawConnection) {
+      const existingUser = usersInRoom[roomId].find(u => u.socketId === socket.id);
+      if (!existingUser) {
+        usersInRoom[roomId].push({ socketId: socket.id, username });
+      }
+    }
 
-//     // MongoDB-based TlDraw room handling
-//     try {
-//       let tldrawState = await TldrawState.findOne({ roomId });
+    // MongoDB-based TlDraw room handling
+    try {
+      let tldrawState = await TldrawState.findOne({ roomId });
       
-//       if (!tldrawState) {
-//         // FIXED: Better default TlDraw state
-//         const emptyTldrawState = {
-//           store: {},
-//           schema: {
-//             schemaVersion: 1,
-//             storeVersion: 4,
-//             recordVersions: {
-//               asset: 1,
-//               camera: 1,
-//               document: 1,
-//               instance: 1,
-//               instance_page_state: 1,
-//               page: 1,
-//               shape: 4,
-//               instance_presence: 1,
-//               pointer: 1
-//             }
-//           }
-//         };
+      if (!tldrawState) {
+        // FIXED: Better default TlDraw state
+        const emptyTldrawState = {
+          store: {},
+          schema: {
+            schemaVersion: 1,
+            storeVersion: 4,
+            recordVersions: {
+              asset: 1,
+              camera: 1,
+              document: 1,
+              instance: 1,
+              instance_page_state: 1,
+              page: 1,
+              shape: 4,
+              instance_presence: 1,
+              pointer: 1
+            }
+          }
+        };
 
-//         tldrawState = new TldrawState({
-//           roomId,
-//           state: emptyTldrawState,
-//           userCount: usersInRoom[roomId].length,
-//           stateVersion: 1
-//         });
-//         await tldrawState.save();
-//         console.log(`✅ TlDraw room created in DB: ${roomId}`);
-//       }
+        tldrawState = new TldrawState({
+          roomId,
+          state: emptyTldrawState,
+          userCount: usersInRoom[roomId].length,
+          stateVersion: 1
+        });
+        await tldrawState.save();
+        console.log(`✅ TlDraw room created in DB: ${roomId}`);
+      }
 
-//       // FIXED: Send initial state to all connections, but only send user list to main connections
-//       console.log('📤 Sending initial TlDraw state');
-//       socket.emit('init-state', tldrawState.state);
+      // FIXED: Send initial state to all connections, but only send user list to main connections
+      console.log('📤 Sending initial TlDraw state');
+      socket.emit('init-state', tldrawState.state);
 
-//       // Only send user list to main connections
-//       if (!isTldrawConnection) {
-//         const usersList = usersInRoom[roomId].map(u => u.socketId);
-//         socket.emit('users-list', usersList);
-//         socket.to(roomId).emit('users-list', usersList);
-//       }
+      // Only send user list to main connections
+      if (!isTldrawConnection) {
+        const usersList = usersInRoom[roomId].map(u => u.socketId);
+        socket.emit('users-list', usersList);
+        socket.to(roomId).emit('users-list', usersList);
+      }
 
-//     } catch (error) {
-//       console.error('❌ Error handling room join:', error);
-//       // Send empty state on error
-//       socket.emit('init-state', {
-//         store: {},
-//         schema: {
-//           schemaVersion: 1,
-//           storeVersion: 4,
-//           recordVersions: {}
-//         }
-//       });
-//     }
+    } catch (error) {
+      console.error('❌ Error handling room join:', error);
+      // Send empty state on error
+      socket.emit('init-state', {
+        store: {},
+        schema: {
+          schemaVersion: 1,
+          storeVersion: 4,
+          recordVersions: {}
+        }
+      });
+    }
 
-//     // Send existing messages and file list to the joining user (only for main connections)
-//     if (!isTldrawConnection) {
-//     const roomMessages = rooms.get(roomId) || [];
-//     socket.emit('chat-history', roomMessages);
+    // Send existing messages and file list to the joining user (only for main connections)
+    if (!isTldrawConnection) {
+    const roomMessages = rooms.get(roomId) || [];
+    socket.emit('chat-history', roomMessages);
 
-//     // Get latest file list from database and broadcast
-//     try {
-//       const files = await File.find({ roomId });
-//       const fileList = files.map((f) => ({
-//         fileName: f.fileName,
-//         content: f.content,
-//         updatedAt: f.updatedAt,
-//       }));
+    // Get latest file list from database and broadcast
+    try {
+      const files = await File.find({ roomId });
+      const fileList = files.map((f) => ({
+        fileName: f.fileName,
+        content: f.content,
+        updatedAt: f.updatedAt,
+      }));
 
-//       // Store current file list in memory
-//       roomFiles.set(roomId, fileList);
+      // Store current file list in memory
+      roomFiles.set(roomId, fileList);
 
-//       // Send to all clients in room
-//       io.to(roomId).emit('files-list-updated', { files: fileList });
-//     } catch (error) {
-//       console.error('Error getting files for room:', error);
-//     }
+      // Send to all clients in room
+      io.to(roomId).emit('files-list-updated', { files: fileList });
+    } catch (error) {
+      console.error('Error getting files for room:', error);
+    }
 
-//     // Notify other users that someone joined (not the user who joined)
-//     socket.to(roomId).emit('user-joined', { username });
+    // Notify other users that someone joined (not the user who joined)
+    socket.to(roomId).emit('user-joined', { username });
     
-//     // Add system message to chat about user joining
-//     const joinMessage = {
-//       type: 'system',
-//       username: 'System',
-//       text: `${username} joined the room`,
-//       timestamp: new Date().toISOString(),
-//       roomId
-//     };
+    // Add system message to chat about user joining
+    const joinMessage = {
+      type: 'system',
+      username: 'System',
+      text: `${username} joined the room`,
+      timestamp: new Date().toISOString(),
+      roomId
+    };
     
-//     // Save system message to room history
-//     if (!rooms.has(roomId)) {
-//       rooms.set(roomId, []);
-//     }
-//     rooms.get(roomId).push(joinMessage);
+    // Save system message to room history
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, []);
+    }
+    rooms.get(roomId).push(joinMessage);
     
-//     // Broadcast join message to all users in room (including the one who joined)
-//     io.to(roomId).emit('receive-message', joinMessage);
+    // Broadcast join message to all users in room (including the one who joined)
+    io.to(roomId).emit('receive-message', joinMessage);
     
-//     // Update user list for all users in room
-//     io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
-//     }
-//   });
+    // Update user list for all users in room
+    io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
+    }
+  });
 
-//   // FIXED: Improved update handling with better error recovery
-//   socket.on('update', async (data) => {
-//     const roomId = data.roomId || socket.roomId;
+  // FIXED: Improved update handling with better error recovery
+  socket.on('update', async (data) => {
+    const roomId = data.roomId || socket.roomId;
     
-//     if (!roomId || !data.state) {
-//       console.log('❌ TlDraw update ignored - missing roomId or state');
-//       return;
-//     }
+    if (!roomId || !data.state) {
+      console.log('❌ TlDraw update ignored - missing roomId or state');
+      return;
+    }
 
-//     console.log('📥 Received TlDraw update for room:', roomId, 'from:', socket.id);
+    console.log('📥 Received TlDraw update for room:', roomId, 'from:', socket.id);
 
-//     try {
-//       // FIXED: Better state validation
-//       if (!data.state.store || typeof data.state.store !== 'object') {
-//         console.log('❌ Invalid TlDraw state structure:', typeof data.state.store);
-//         return;
-//       }
+    try {
+      // FIXED: Better state validation
+      if (!data.state.store || typeof data.state.store !== 'object') {
+        console.log('❌ Invalid TlDraw state structure:', typeof data.state.store);
+        return;
+      }
 
-//       // Update state in MongoDB with retry logic
-//       let retries = 3;
-//       let result = null;
+      // Update state in MongoDB with retry logic
+      let retries = 3;
+      let result = null;
       
-//       while (retries > 0 && !result) {
-//         try {
-//           result = await TldrawState.findOneAndUpdate(
-//             { roomId },
-//             {
-//               state: data.state,
-//               lastUpdate: new Date(),
-//               $inc: { stateVersion: 1 }
-//             },
-//             { 
-//               new: true, 
-//               upsert: true,
-//               runValidators: true,
-//               maxTimeMS: 5000 // 5 second timeout
-//             }
-//           );
-//           break;
-//         } catch (retryError) {
-//           retries--;
-//           console.log(`❌ TlDraw update retry ${3-retries}/3:`, retryError.message);
-//           if (retries === 0) throw retryError;
-//           await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay
-//         }
-//       }
+      while (retries > 0 && !result) {
+        try {
+          result = await TldrawState.findOneAndUpdate(
+            { roomId },
+            {
+              state: data.state,
+              lastUpdate: new Date(),
+              $inc: { stateVersion: 1 }
+            },
+            { 
+              new: true, 
+              upsert: true,
+              runValidators: true,
+              maxTimeMS: 5000 // 5 second timeout
+            }
+          );
+          break;
+        } catch (retryError) {
+          retries--;
+          console.log(`❌ TlDraw update retry ${3-retries}/3:`, retryError.message);
+          if (retries === 0) throw retryError;
+          await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay
+        }
+      }
 
-//       if (result) {
-//         console.log('💾 TlDraw state updated in MongoDB for room:', roomId, 'version:', result.stateVersion);
+      if (result) {
+        console.log('💾 TlDraw state updated in MongoDB for room:', roomId, 'version:', result.stateVersion);
         
-//         // FIXED: Broadcast to all users in the room (exclude sender)
-//         socket.to(roomId).emit('update', {
-//           changes: data.changes,
-//           state: data.state,
-//           timestamp: data.timestamp || Date.now(),
-//           sourceId: socket.id,
-//           stateVersion: result.stateVersion
-//         });
+        // FIXED: Broadcast to all users in the room (exclude sender)
+        socket.to(roomId).emit('update', {
+          changes: data.changes,
+          state: data.state,
+          timestamp: data.timestamp || Date.now(),
+          sourceId: socket.id,
+          stateVersion: result.stateVersion
+        });
         
-//         console.log('📡 Broadcasting TlDraw update to room:', roomId);
-//       }
+        console.log('📡 Broadcasting TlDraw update to room:', roomId);
+      }
       
-//     } catch (error) {
-//       console.error('❌ Error updating TlDraw state:', error);
+    } catch (error) {
+      console.error('❌ Error updating TlDraw state:', error);
       
-//       // Send error to client for recovery
-//       socket.emit('tldraw-error', { 
-//         message: 'Failed to save drawing', 
-//         roomId,
-//         error: error.message,
-//         shouldReload: true // Indicate client should request fresh state
-//       });
+      // Send error to client for recovery
+      socket.emit('tldraw-error', { 
+        message: 'Failed to save drawing', 
+        roomId,
+        error: error.message,
+        shouldReload: true // Indicate client should request fresh state
+      });
       
-//       // Try to send current state for recovery
-//       try {
-//         const currentState = await TldrawState.findOne({ roomId });
-//         if (currentState) {
-//           socket.emit('init-state', currentState.state);
-//         }
-//       } catch (recoveryError) {
-//         console.error('❌ Error during TlDraw recovery:', recoveryError);
-//       }
-//     }
-//   });
+      // Try to send current state for recovery
+      try {
+        const currentState = await TldrawState.findOne({ roomId });
+        if (currentState) {
+          socket.emit('init-state', currentState.state);
+        }
+      } catch (recoveryError) {
+        console.error('❌ Error during TlDraw recovery:', recoveryError);
+      }
+    }
+  });
 
-//   socket.on('file-created', async ({ roomId, fileName, content }) => {
-//     try {
-//       // First save to MongoDB
-//       const file = await File.create({
-//         roomId,
-//         fileName,
-//         content: content || '',
-//       });
+  socket.on('file-created', async ({ roomId, fileName, content }) => {
+    try {
+      // First save to MongoDB
+      const file = await File.create({
+        roomId,
+        fileName,
+        content: content || '',
+      });
 
-//       // Update room's file list in memory
-//       const roomFileList = roomFiles.get(roomId) || [];
-//       roomFileList.push({
-//         fileName: file.fileName,
-//         content: file.content,
-//         updatedAt: file.createdAt,
-//       });
-//       roomFiles.set(roomId, roomFileList);
+      // Update room's file list in memory
+      const roomFileList = roomFiles.get(roomId) || [];
+      roomFileList.push({
+        fileName: file.fileName,
+        content: file.content,
+        updatedAt: file.createdAt,
+      });
+      roomFiles.set(roomId, roomFileList);
 
-//       // Broadcast to ALL clients in the room
-//       io.to(roomId).emit('file-created', {
-//         fileName: file.fileName,
-//         content: file.content,
-//         updatedAt: file.createdAt,
-//       });
+      // Broadcast to ALL clients in the room
+      io.to(roomId).emit('file-created', {
+        fileName: file.fileName,
+        content: file.content,
+        updatedAt: file.createdAt,
+      });
 
-//       // Also send updated file list
-//       io.to(roomId).emit('files-list-updated', {
-//         files: roomFileList,
-//       });
-//     } catch (error) {
-//       console.error('Error creating file:', error);
-//       socket.emit('file-error', {
-//         error: 'Failed to create file',
-//         details: error.message,
-//       });
-//     }
-//   });
+      // Also send updated file list
+      io.to(roomId).emit('files-list-updated', {
+        files: roomFileList,
+      });
+    } catch (error) {
+      console.error('Error creating file:', error);
+      socket.emit('file-error', {
+        error: 'Failed to create file',
+        details: error.message,
+      });
+    }
+  });
 
-//   socket.on('file-deleted', async ({ roomId, fileName }) => {
-//     try {
-//       // Delete from MongoDB
-//       await File.findOneAndDelete({ roomId, fileName });
+  socket.on('file-deleted', async ({ roomId, fileName }) => {
+    try {
+      // Delete from MongoDB
+      await File.findOneAndDelete({ roomId, fileName });
 
-//       // Update room's file list in memory
-//       const roomFileList = roomFiles.get(roomId) || [];
-//       const updatedFileList = roomFileList.filter((f) => f.fileName !== fileName);
-//       roomFiles.set(roomId, updatedFileList);
+      // Update room's file list in memory
+      const roomFileList = roomFiles.get(roomId) || [];
+      const updatedFileList = roomFileList.filter((f) => f.fileName !== fileName);
+      roomFiles.set(roomId, updatedFileList);
 
-//       // Broadcast deletion to all clients
-//       io.to(roomId).emit('file-deleted', { fileName });
+      // Broadcast deletion to all clients
+      io.to(roomId).emit('file-deleted', { fileName });
 
-//       // Send updated file list
-//       io.to(roomId).emit('files-list-updated', {
-//         files: updatedFileList,
-//       });
-//     } catch (error) {
-//       console.error('Error deleting file:', error);
-//       socket.emit('file-error', {
-//         error: 'Failed to delete file',
-//         details: error.message,
-//       });
-//     }
-//   });
+      // Send updated file list
+      io.to(roomId).emit('files-list-updated', {
+        files: updatedFileList,
+      });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      socket.emit('file-error', {
+        error: 'Failed to delete file',
+        details: error.message,
+      });
+    }
+  });
 
-//   socket.on('file-content-change', ({ roomId, fileName, content }) => {
-//     socket.to(roomId).emit('file-content-change', {
-//       fileName,
-//       content,
-//       timestamp: Date.now(),
-//     });
-//   });
+  socket.on('file-content-change', ({ roomId, fileName, content }) => {
+    socket.to(roomId).emit('file-content-change', {
+      fileName,
+      content,
+      timestamp: Date.now(),
+    });
+  });
 
-//   socket.on('file-updated', async ({ roomId, fileName, content }) => {
-//     try {
-//       // Update file in MongoDB after debounce
-//       const file = await File.findOneAndUpdate(
-//         { roomId, fileName },
-//         {
-//           content,
-//           updatedAt: new Date(),
-//         },
-//         { upsert: true, new: true }
-//       );
+  socket.on('file-updated', async ({ roomId, fileName, content }) => {
+    try {
+      // Update file in MongoDB after debounce
+      const file = await File.findOneAndUpdate(
+        { roomId, fileName },
+        {
+          content,
+          updatedAt: new Date(),
+        },
+        { upsert: true, new: true }
+      );
 
-//       // Update room's file list in memory
-//       const roomFileList = roomFiles.get(roomId) || [];
-//       const fileIndex = roomFileList.findIndex((f) => f.fileName === fileName);
-//       if (fileIndex !== -1) {
-//         roomFileList[fileIndex] = {
-//           fileName: file.fileName,
-//           content: file.content,
-//           updatedAt: file.updatedAt,
-//         };
-//       }
+      // Update room's file list in memory
+      const roomFileList = roomFiles.get(roomId) || [];
+      const fileIndex = roomFileList.findIndex((f) => f.fileName === fileName);
+      if (fileIndex !== -1) {
+        roomFileList[fileIndex] = {
+          fileName: file.fileName,
+          content: file.content,
+          updatedAt: file.updatedAt,
+        };
+      }
 
-//       // Confirm save to other clients
-//       socket.to(roomId).emit('file-updated', {
-//         fileName,
-//         content: file.content,
-//         updatedAt: file.updatedAt,
-//       });
-//     } catch (error) {
-//       console.error('Error saving file:', error);
-//       socket.emit('file-error', {
-//         error: 'Failed to save file',
-//         details: error.message,
-//       });
-//     }
-//   });
+      // Confirm save to other clients
+      socket.to(roomId).emit('file-updated', {
+        fileName,
+        content: file.content,
+        updatedAt: file.updatedAt,
+      });
+    } catch (error) {
+      console.error('Error saving file:', error);
+      socket.emit('file-error', {
+        error: 'Failed to save file',
+        details: error.message,
+      });
+    }
+  });
 
-//   // --- CHAT SOCKET EVENTS ---
-//   socket.on('send-message', (message) => {
-//     console.log('Received message from client:', message);
-//     const { roomId } = message;
-//     if (!roomId) {
-//       console.log('No roomId provided in message');
-//       return;
-//     }
-//     // Save message to room history (per room)
-//     if (!rooms.has(roomId)) {
-//       rooms.set(roomId, []);
-//     }
-//     rooms.get(roomId).push(message);
-//     console.log('Broadcasting message to room:', roomId);
-//     // Broadcast to all users in the room (including sender)
-//     io.to(roomId).emit('receive-message', message);
-//     // Send notification to all users in the room except sender
-//     socket.to(roomId).emit('chat-notification', {
-//       roomId,
-//       username: message.username,
-//       text: message.text,
-//       timestamp: message.timestamp,
-//     });
-//   });
+  // --- CHAT SOCKET EVENTS ---
+  socket.on('send-message', (message) => {
+    console.log('Received message from client:', message);
+    const { roomId } = message;
+    if (!roomId) {
+      console.log('No roomId provided in message');
+      return;
+    }
+    // Save message to room history (per room)
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, []);
+    }
+    rooms.get(roomId).push(message);
+    console.log('Broadcasting message to room:', roomId);
+    // Broadcast to all users in the room (including sender)
+    io.to(roomId).emit('receive-message', message);
+    // Send notification to all users in the room except sender
+    socket.to(roomId).emit('chat-notification', {
+      roomId,
+      username: message.username,
+      text: message.text,
+      timestamp: message.timestamp,
+    });
+  });
 
-//   socket.on('get-chat-history', ({ roomId }) => {
-//     console.log('Client requesting chat history for room:', roomId);
-//     if (!roomId) return;
-//     const history = rooms.get(roomId) || [];
-//     console.log('Sending chat history:', history.length, 'messages');
-//     socket.emit('chat-history', history);
-//   });
+  socket.on('get-chat-history', ({ roomId }) => {
+    console.log('Client requesting chat history for room:', roomId);
+    if (!roomId) return;
+    const history = rooms.get(roomId) || [];
+    console.log('Sending chat history:', history.length, 'messages');
+    socket.emit('chat-history', history);
+  });
 
-//   socket.on('disconnect', async () => {
-//     const roomId = socket.roomId;
-//     const isTldrawConnection = socket.isTldrawConnection;
-//     console.log(`🔌 User disconnecting: ${socket.id} from room: ${roomId} ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
+  socket.on('disconnect', async () => {
+    const roomId = socket.roomId;
+    const isTldrawConnection = socket.isTldrawConnection;
+    console.log(`🔌 User disconnecting: ${socket.id} from room: ${roomId} ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
     
-//     if (roomId && usersInRoom[roomId]) {
-//       // Only remove from user list if it's a main connection
-//       if (!isTldrawConnection) {
-//         const leavingUser = usersInRoom[roomId].find(user => user.socketId === socket.id);
+    if (roomId && usersInRoom[roomId]) {
+      // Only remove from user list if it's a main connection
+      if (!isTldrawConnection) {
+        const leavingUser = usersInRoom[roomId].find(user => user.socketId === socket.id);
         
-//         usersInRoom[roomId] = usersInRoom[roomId].filter(
-//           (user) => user.socketId !== socket.id
-//         );
+        usersInRoom[roomId] = usersInRoom[roomId].filter(
+          (user) => user.socketId !== socket.id
+        );
         
-//         if (usersInRoom[roomId].length === 0) {
-//           delete usersInRoom[roomId];
-//         } else {
-//           // Notify remaining users that someone left
-//           if (leavingUser) {
-//             socket.to(roomId).emit('user-left', { username: leavingUser.username });
+        if (usersInRoom[roomId].length === 0) {
+          delete usersInRoom[roomId];
+        } else {
+          // Notify remaining users that someone left
+          if (leavingUser) {
+            socket.to(roomId).emit('user-left', { username: leavingUser.username });
             
-//             // Add system message to chat about user leaving
-//             const leaveMessage = {
-//               type: 'system',
-//               username: 'System',
-//               text: `${leavingUser.username} left the room`,
-//               timestamp: new Date().toISOString(),
-//               roomId: roomId
-//             };
+            // Add system message to chat about user leaving
+            const leaveMessage = {
+              type: 'system',
+              username: 'System',
+              text: `${leavingUser.username} left the room`,
+              timestamp: new Date().toISOString(),
+              roomId: roomId
+            };
             
-//             // Save system message to room history
-//             if (!rooms.has(roomId)) {
-//               rooms.set(roomId, []);
-//             }
-//             rooms.get(roomId).push(leaveMessage);
+            // Save system message to room history
+            if (!rooms.has(roomId)) {
+              rooms.set(roomId, []);
+            }
+            rooms.get(roomId).push(leaveMessage);
             
-//             // Broadcast leave message to remaining users
-//             socket.to(roomId).emit('receive-message', leaveMessage);
-//           }
+            // Broadcast leave message to remaining users
+            socket.to(roomId).emit('receive-message', leaveMessage);
+          }
           
-//           // Update user list for remaining users
-//           io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
-//         }
+          // Update user list for remaining users
+          io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
+        }
         
-//         // Update user count in MongoDB
-//         try {
-//           await TldrawState.findOneAndUpdate(
-//             { roomId },
-//             { 
-//               userCount: usersInRoom[roomId] ? usersInRoom[roomId].length : 0,
-//               lastUpdate: new Date()
-//             }
-//           );
+        // Update user count in MongoDB
+        try {
+          await TldrawState.findOneAndUpdate(
+            { roomId },
+            { 
+              userCount: usersInRoom[roomId] ? usersInRoom[roomId].length : 0,
+              lastUpdate: new Date()
+            }
+          );
           
-//           // Send updated user list to remaining users
-//           const usersList = usersInRoom[roomId] ? usersInRoom[roomId].map(u => u.socketId) : [];
-//           io.to(roomId).emit('users-list', usersList);
+          // Send updated user list to remaining users
+          const usersList = usersInRoom[roomId] ? usersInRoom[roomId].map(u => u.socketId) : [];
+          io.to(roomId).emit('users-list', usersList);
           
-//         } catch (error) {
-//           console.error('❌ Error updating user count:', error);
-//         }
-//       }
-//     }
-//   });
-// });
+        } catch (error) {
+          console.error('❌ Error updating user count:', error);
+        }
+      }
+    }
+  });
+});
 
 app.post('/api/execute', async (req, res) => {
   try {

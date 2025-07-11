@@ -130,6 +130,7 @@ const server = http.createServer(app);
 app.use(
   cors({
     origin: [
+      'https://cunity.vercel.app',
       'https://cu-sandy.vercel.app',
       'https://cuni.vercel.app',
       'http://localhost:5173',
@@ -272,6 +273,7 @@ app.use('/api/email', emailRoutes);
 const io = new Server(server, {
   cors: {
     origin: [
+      'https://cunity.vercel.app',
       'https://cu-sandy.vercel.app',
       'https://cuni.vercel.app',
       'http://localhost:5173',

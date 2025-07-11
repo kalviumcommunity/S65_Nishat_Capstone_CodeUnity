@@ -3,7 +3,7 @@ const config = {
     ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
     : 'http://localhost:8080',
   frontendUrl: import.meta.env.PROD
-    ? 'https://cu-sandy.vercel.app'
+    ? 'https://cunity.vercel.app'
     : 'http://localhost:5173'
 };
 

@@ -15,6 +15,10 @@ const UserSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  password: {
+    type: String,
+    sparse: true // Allow null for OAuth-only users
+  },
   // OAuth provider data (optional)
   oauth: {
     google: {

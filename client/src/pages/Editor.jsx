@@ -15,8 +15,10 @@ import MobileError from '../components/MobileError.jsx';
 import TldrawWithRealtime from '../components/TldrawWithRealtime';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '../components/NotificationToast';
-import { FaShare, FaCopy, FaEnvelope, FaCheck, FaTimes, FaFolder, FaUsers, FaPaintBrush, FaComments, FaRobot } from 'react-icons/fa';
+import { FaShare, FaCopy, FaEnvelope, FaCheck, FaTimes, FaFolder, FaUsers, FaPaintBrush, FaComments, FaRobot, FaUser, FaSignOutAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { FiPlus } from 'react-icons/fi';
+import AuthModal from '../components/AuthModal';
+import { useUsageTracking } from '../hooks/useUsageTracking';
 
 const BACKEND_URL = import.meta.env.PROD 
   ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
@@ -56,6 +58,11 @@ const Editor = () => {
   const [currentFile, setCurrentFile] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Authentication and usage tracking
+  const { usageCount, isLimitReached, user, incrementUsage, setUserAuth, isAuthenticated } = useUsageTracking();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUsageWarning, setShowUsageWarning] = useState(false);
   
   // Initialize ref after state declaration
   const activeTabRef = useRef(activeTab);
@@ -228,7 +235,7 @@ const Editor = () => {
       reconnectionDelay: 1000,
       timeout: 20000,
       path: '/socket.io/', // Explicitly set the socket.io path
-      forceNew: true // Force a new connection
+      forceNew: false // Allow connection reuse
     });
 
     const socket = socketRef.current;
@@ -237,6 +244,7 @@ const Editor = () => {
     socket.removeAllListeners();
 
     socket.on('connect', () => {
+      console.log('🔗 Socket connected:', socket.id);
       socket.emit('join-room', { roomId, username: state.username });
     });
 
@@ -245,7 +253,14 @@ const Editor = () => {
     });
 
     socket.on('update-user-list', (userList) => {
+      console.log('👥 Received user list update:', userList);
       setUsers(userList.map(u => u.username));
+    });
+
+    // Also listen for users-list event (sent on join)
+    socket.on('users-list', (usersList) => {
+      console.log('👥 Received initial users list:', usersList);
+      // usersList contains socket IDs, we need to get usernames from the server
     });
 
     // User join/leave notification events - handled in chat as system messages
@@ -587,6 +602,21 @@ const Editor = () => {
   const handleRunCode = async () => {
     if (!currentFile || !code) return null;
 
+    // Check if user needs to authenticate
+    if (!isAuthenticated()) {
+      const limitReached = incrementUsage();
+      if (limitReached) {
+        setShowAuthModal(true);
+        return null;
+      }
+      
+      // Show warning when approaching limit (after 2 runs, before 3rd)
+      if (usageCount >= 2) {
+        setShowUsageWarning(true);
+        setTimeout(() => setShowUsageWarning(false), 5000);
+      }
+    }
+
     try {
       const fileExt = currentFile.split('.').pop();
       const response = await axios.post(`${BACKEND_URL}/api/execute`, {
@@ -609,6 +639,44 @@ const Editor = () => {
         output: `Error: ${error.message}`
       });
       throw error; // Throw the error so CodeRunner can handle it
+    }
+  };
+
+  // Handle authentication
+  const handleAuth = async (userData) => {
+    setUserAuth(userData);
+    
+    // Add room to user's history if authenticated
+    if (userData && roomId) {
+      try {
+        const token = localStorage.getItem('codeunity_token');
+        await axios.post(`${BACKEND_URL}/api/auth/room-history`, {
+          roomId,
+          roomName: roomId,
+          role: 'participant'
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error('Error adding room to history:', error);
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('codeunity_token');
+      if (token) {
+        await axios.post(`${BACKEND_URL}/api/auth/logout`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('codeunity_user');
+      localStorage.removeItem('codeunity_token');
+      setUserAuth(null);
     }
   };
 
@@ -785,6 +853,7 @@ const Editor = () => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             unreadCount={unreadCount}
+            onAuthRequired={() => setShowAuthModal(true)}
           />
         </motion.div>
 
@@ -838,6 +907,44 @@ const Editor = () => {
               </div>
               
               <div className="flex items-center gap-2">
+                {/* User Authentication Section */}
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                      <FaUser className="w-3 h-3 text-green-400" />
+                      <span className="text-xs text-green-300 font-medium">{user.username}</span>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleLogout}
+                      className="p-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 hover:border-gray-500/30 text-gray-400 hover:text-gray-300 transition-all duration-200"
+                      title="Logout"
+                    >
+                      <FaSignOutAlt className="w-3 h-3" />
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {!isLimitReached && (
+                      <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                        <span className="text-xs text-purple-300 font-medium">
+                          {3 - usageCount} runs left
+                        </span>
+                      </div>
+                    )}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowAuthModal(true)}
+                      className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 hover:border-pink-500/30 text-pink-400 hover:text-pink-300 transition-all duration-200"
+                      title="Sign In"
+                    >
+                      <span className="text-xs font-medium">Sign In</span>
+                    </motion.button>
+                  </div>
+                )}
+                
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1096,6 +1203,95 @@ const Editor = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Auth Modal - Portal style overlay */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={() => setShowAuthModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/30 rounded-2xl shadow-2xl max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                    <FaUser className="text-pink-400" />
+                    Authentication Required
+                  </h3>
+                  <button
+                    onClick={() => setShowAuthModal(false)}
+                    className="text-white/50 hover:text-white/80 transition-colors p-1"
+                  >
+                    <FaTimes className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                {/* Auth Content */}
+                <div className="space-y-4">
+                  <p className="text-gray-400 text-sm">
+                    To access this feature, please authenticate yourself. This helps us track usage and manage access.
+                  </p>
+                  
+                  <button
+                    onClick={async () => {
+                      setShowAuthModal(false);
+                      // Delay navigation to allow modal animation to complete
+                      await new Promise(resolve => setTimeout(resolve, 300));
+                      window.open('https://codeunity.vercel.app/auth', '_blank');
+                    }}
+                    className="w-full flex items-center justify-center gap-3 p-3 rounded-lg bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-pink-400 hover:from-pink-500/30 hover:to-purple-600/30 transition-all duration-200"
+                  >
+                    <FaSignOutAlt className="w-5 h-5" />
+                    <span className="text-sm font-medium">Authenticate with CodeUnity</span>
+                  </button>
+                </div>
+                
+                {/* Note */}
+                <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <p className="text-purple-300 text-sm">
+                    ⚠️ Note: Usage limits apply. Please check your email for usage notifications.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Usage Warning Toast */}
+      {showUsageWarning && (
+        <div className="fixed bottom-4 right-4 z-[9999]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 shadow-lg"
+          >
+            <FaUser className="w-5 h-5" />
+            <div className="text-sm">
+              <p className="font-medium">Almost at limit!</p>
+              <p>You have {3 - usageCount} code runs left. Sign in for unlimited usage.</p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuth={handleAuth}
+      />
     </div>
   );
 };

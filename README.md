@@ -1,6 +1,6 @@
 # 🧑‍💻 CodeUnity: Real-Time Collaborative Coding Platform
 
-[🌐 Live Demo](https://cunity.vercel.app/)
+    [🌐 Live Demo](https://cunity.vercel.app/)
 
 > “CodeUnity empowers real-time collaboration and creativity—enabling developers to build, learn, and grow together.”
 
@@ -80,7 +80,7 @@
 ## 🚀 Deployment
 
 CodeUnity is currently live and can be accessed here:  
-🔗 **Frontend**: [https://s65-nishat-capstone-code-unity.vercel.app/](https://cunity.vercel.app/)
+🔗 **Frontend**: [https://cunity.vercel.app/](https://cunity.vercel.app/)
 
 > *(Backend and code execution service are self-hosted and containerized.)*
 

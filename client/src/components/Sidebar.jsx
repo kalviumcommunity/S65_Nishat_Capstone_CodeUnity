@@ -3,14 +3,24 @@ import { motion } from 'framer-motion';
 import { FaFolder, FaUsers, FaPaintBrush, FaComments, FaRobot, FaLock } from 'react-icons/fa';
 import codeunityLogo from '../assets/logo.png';
 
-const SideBar = ({ activeTab, setActiveTab, unreadCount }) => {
+const SideBar = ({ activeTab, setActiveTab, unreadCount, onAuthRequired }) => {
   const isAuthenticated = !!localStorage.getItem('codeunity_token');
   const usageCount = parseInt(localStorage.getItem('codeunity_usage_count') || '0', 10);
   const isLimitReached = usageCount >= 3;
 
+  const handleTabClick = (tab) => {
+    if (tab.restricted) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      return;
+    }
+    setActiveTab(tab.id);
+  };
+
   const tabs = [
     { id: 'files', icon: FaFolder, label: 'Files', restricted: false },
-    { id: 'users', icon: FaUsers, label: 'Users', restricted: !isAuthenticated && isLimitReached },
+    { id: 'users', icon: FaUsers, label: 'Users', restricted: false }, // Always visible
     { id: 'draw', icon: FaPaintBrush, label: 'Draw', restricted: !isAuthenticated && isLimitReached },
     { id: 'chat', icon: FaComments, label: 'Chat', badge: unreadCount, restricted: !isAuthenticated && isLimitReached },
     { id: 'copilot', icon: FaRobot, label: 'AI', restricted: !isAuthenticated && isLimitReached }
@@ -47,19 +57,18 @@ const SideBar = ({ activeTab, setActiveTab, unreadCount }) => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => !tab.restricted && setActiveTab(tab.id)}
-              disabled={tab.restricted}
+              onClick={() => handleTabClick(tab)}
               className={`
                 relative w-12 h-12 rounded-xl flex items-center justify-center 
                 transition-all duration-300 group
                 ${activeTab === tab.id
                   ? 'bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 shadow-lg shadow-pink-500/10'
                   : tab.restricted
-                  ? 'hover:bg-gray-800/20 border border-transparent text-gray-600 cursor-not-allowed'
+                  ? 'hover:bg-gray-800/20 border border-transparent text-gray-600 cursor-pointer'
                   : 'hover:bg-gray-800/30 border border-transparent hover:border-gray-700/30 text-gray-400 hover:text-white'
                 }
               `}
-              title={tab.restricted ? `${tab.label} (Premium)` : tab.label}
+              title={tab.restricted ? `${tab.label} (Sign in required)` : tab.label}
             >
               <tab.icon className={`w-4 h-4 transition-all duration-200 ${
                 activeTab === tab.id 

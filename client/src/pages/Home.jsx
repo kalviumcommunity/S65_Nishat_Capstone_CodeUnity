@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import codeunityLogo from '../assets/logo.png';
-import { FaLinkedin, FaGithub, FaInstagram } from 'react-icons/fa';
+import { FaLinkedin, FaGithub, FaInstagram, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
+import AuthModal from '../components/AuthModal';
+import { useUsageTracking } from '../hooks/useUsageTracking';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -14,6 +16,10 @@ const Home = () => {
   const [scrollY, setScrollY] = useState(0);
   const [activeSection, setActiveSection] = useState('HOME');
   const [isManualNavigation, setIsManualNavigation] = useState(false);
+  
+  // Authentication
+  const { user, setUserAuth } = useUsageTracking();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const joinRoomRef = useRef(null);
   const aboutRef = useRef(null);
@@ -22,6 +28,17 @@ const Home = () => {
   const testimonialsRef = useRef(null);
   const faqRef = useRef(null);
   const connectRef = useRef(null);
+
+  // Authentication handlers
+  const handleAuth = (userData) => {
+    setUserAuth(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('codeunity_user');
+    localStorage.removeItem('codeunity_token');
+    setUserAuth(null);
+  };
 
   const scrollToSection = (ref, sectionName) => {
     if (sectionName === 'HOME') {
@@ -225,6 +242,36 @@ const Home = () => {
                 {item.name}
               </button>
             ))}
+            
+            {/* Authentication Button */}
+            {user ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                  <FaUser className="w-3 h-3 text-green-400" />
+                  <span className="text-xs text-green-300 font-medium">{user.username}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 hover:border-gray-500/30 text-gray-400 hover:text-gray-300 transition-all duration-200"
+                  title="Logout"
+                >
+                  <FaSignOutAlt className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <motion.button
+                onClick={() => setShowAuthModal(true)}
+                whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(236, 72, 153, 0.25)" }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500/15 to-purple-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
+                title="Sign In to CodeUnity"
+              >
+                <div className="flex items-center gap-2">
+                  <FaUser className="w-3 h-3" />
+                  <span className="text-sm font-semibold">Sign In</span>
+                </div>
+              </motion.button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -282,6 +329,40 @@ const Home = () => {
                 {item.name}
               </button>
             ))}
+            
+            {/* Mobile Authentication */}
+            <div className="pt-2 border-t border-gray-700/30">
+              {user ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FaUser className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-green-300">{user.username}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 text-gray-400 hover:text-gray-300 transition-all duration-200"
+                    title="Logout"
+                  >
+                    <FaSignOutAlt className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <motion.button
+                  onClick={() => {
+                    setShowAuthModal(true);
+                    setIsMenuOpen(false);
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500/15 to-purple-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <FaUser className="w-4 h-4" />
+                    <span className="text-sm font-semibold">Sign In</span>
+                  </div>
+                </motion.button>
+              )}
+            </div>
           </div>
         </motion.div>
       </nav>
@@ -1228,6 +1309,13 @@ const Home = () => {
           </div>
         </div>
       </footer>
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuth={handleAuth}
+      />
     </div>
   );
 };

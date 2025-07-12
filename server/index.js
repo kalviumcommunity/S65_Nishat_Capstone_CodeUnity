@@ -10,6 +10,7 @@ const fileRoutes = require('./routes/files.js');
 const aiRoutes = require('./routes/ai-gemini.js'); // Gemini-only AI router
 const aiChatRoutes = require('./routes/aiChat.js'); // AI chat persistence routes
 const emailRoutes = require('./routes/email.js'); // Email routes
+const authRoutes = require('./routes/auth.js'); // Authentication routes
 
 // Connect to MongoDB with enhanced production configuration
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -269,6 +270,7 @@ app.use('/api/files', fileRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/auth', authRoutes); // Authentication routes
 
 const io = new Server(server, {
   cors: {
@@ -309,12 +311,6 @@ io.on('connection', (socket) => {
     const username = typeof data === 'object' ? data.username : `User-${socket.id.slice(0, 4)}`;
     const isTldrawConnection = typeof data === 'object' ? data.isTldrawConnection : false;
     
-    // FIXED: Prevent duplicate joins
-    if (socket.roomId === roomId) {
-      console.log('🔄 User already in room:', roomId);
-      return;
-    }
-    
     console.log(`🚪 Join room: ${roomId} by ${username} (${socket.id}) ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
     
     socket.join(roomId);
@@ -326,11 +322,14 @@ io.on('connection', (socket) => {
       usersInRoom[roomId] = [];
     }
 
-    // FIXED: Only add main connections to user list, not TlDraw connections
+    // Add user to room - allow multiple connections per user (different tabs)
     if (!isTldrawConnection) {
-      const existingUser = usersInRoom[roomId].find(u => u.socketId === socket.id);
-      if (!existingUser) {
+      const existingUserIndex = usersInRoom[roomId].findIndex(u => u.socketId === socket.id);
+      if (existingUserIndex === -1) {
         usersInRoom[roomId].push({ socketId: socket.id, username });
+        console.log(`✅ User ${username} added to room ${roomId}. Total users: ${usersInRoom[roomId].length}`);
+      } else {
+        console.log(`🔄 User ${username} already exists in room ${roomId}`);
       }
     }
 
@@ -369,15 +368,17 @@ io.on('connection', (socket) => {
         console.log(`✅ TlDraw room created in DB: ${roomId}`);
       }
 
-      // FIXED: Send initial state to all connections, but only send user list to main connections
+      // Send initial state to all connections
       console.log('📤 Sending initial TlDraw state');
       socket.emit('init-state', tldrawState.state);
 
-      // Only send user list to main connections
+      // Send user list to all connections in room (not just main connections)
       if (!isTldrawConnection) {
-        const usersList = usersInRoom[roomId].map(u => u.socketId);
-        socket.emit('users-list', usersList);
-        socket.to(roomId).emit('users-list', usersList);
+        console.log(`📋 Sending user list to room ${roomId}:`, usersInRoom[roomId]);
+        // Send to the joining user
+        socket.emit('update-user-list', usersInRoom[roomId]);
+        // Send to all other users in the room
+        socket.to(roomId).emit('update-user-list', usersInRoom[roomId]);
       }
 
     } catch (error) {
@@ -684,9 +685,14 @@ io.on('connection', (socket) => {
           (user) => user.socketId !== socket.id
         );
         
+        console.log(`🚪 User ${leavingUser?.username} left room ${roomId}. Remaining users: ${usersInRoom[roomId].length}`);
+        
         if (usersInRoom[roomId].length === 0) {
           delete usersInRoom[roomId];
         } else {
+          // Update user list for remaining users
+          socket.to(roomId).emit('update-user-list', usersInRoom[roomId]);
+          
           // Notify remaining users that someone left
           if (leavingUser) {
             socket.to(roomId).emit('user-left', { username: leavingUser.username });

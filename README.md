@@ -82,6 +82,6 @@
 CodeUnity is currently live and can be accessed here:  
 🔗 **Frontend**: [https://cunity.vercel.app/](https://cunity.vercel.app/)
 
-> **Backend** : https://s65-nishat-capstone-codeunity-swbt.onrender.com
+🔗 **Backend** : https://s65-nishat-capstone-codeunity-swbt.onrender.com
 
 ---

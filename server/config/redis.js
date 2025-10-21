@@ -8,70 +8,61 @@ const redis = require('redis');
 let redisClient = null;
 let isRedisConnected = false;
 
-/**
- * Initialize Redis connection
- * Falls back gracefully if Redis is not available
- */
-const connectRedis = async () => {
-  try {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    
-    console.log('[INFO] Connecting to Redis...');
-    console.log(`[INFO] Redis URL: ${redisUrl.replace(/\/\/.*@/, '//***@')}`);
-    
-    redisClient = redis.createClient({
-      url: redisUrl,
-      socket: {
-        connectTimeout: 5000,
-        reconnectStrategy: (retries) => {
-          if (retries > 3) {
-            console.log('[ERROR] Redis max retries reached');
-            return new Error('Max retries reached');
-          }
-          const delay = Math.min(retries * 1000, 3000);
-          console.log(`[INFO] Redis reconnecting in ${delay}ms...`);
-          return delay;
-        }
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
+console.log('[INFO] Connecting to Redis...');
+
+redisClient = redis.createClient({
+  url: redisUrl,
+  socket: {
+    connectTimeout: 5000,
+    reconnectStrategy: (retries) => {
+      if (retries > 3) {
+        console.log('[ERROR] Redis max retries reached');
+        return new Error('Max retries reached');
       }
-    });
+      const delay = Math.min(retries * 1000, 3000);
+      console.log(`[INFO] Redis reconnecting in ${delay}ms...`);
+      return delay;
+    }
+  }
+});
 
-    redisClient.on('error', (err) => {
-      console.error('[ERROR] Redis Client Error:', err.message);
-      isRedisConnected = false;
-    });
+redisClient.on('error', (err) => {
+  console.error('[ERROR] Redis Client Error:', err.message);
+  isRedisConnected = false;
+});
 
-    redisClient.on('connect', () => {
-      console.log('[INFO] Redis client connected');
-    });
+redisClient.on('connect', () => {
+  console.log('[INFO] Redis client connected');
+});
 
-    redisClient.on('ready', () => {
-      console.log('[SUCCESS] Redis client ready');
-      isRedisConnected = true;
-    });
+redisClient.on('ready', () => {
+  console.log('[SUCCESS] Redis client ready');
+  isRedisConnected = true;
+});
 
-    redisClient.on('reconnecting', () => {
-      console.log('[INFO] Redis client reconnecting...');
-      isRedisConnected = false;
-    });
+redisClient.on('reconnecting', () => {
+  console.log('[INFO] Redis client reconnecting...');
+  isRedisConnected = false;
+});
 
-    redisClient.on('end', () => {
-      console.log('[INFO] Redis connection closed');
-      isRedisConnected = false;
-    });
+redisClient.on('end', () => {
+  console.log('[INFO] Redis connection closed');
+  isRedisConnected = false;
+});
 
-    await redisClient.connect();
-    await redisClient.ping();
+// Connect to Redis
+redisClient.connect()
+  .then(() => {
     console.log('[SUCCESS] Redis connection successful');
-    
-    return redisClient;
-    
-  } catch (error) {
+  })
+  .catch((error) => {
     console.warn('[WARNING] Redis connection failed:', error.message);
     console.warn('[INFO] Application will continue without Redis caching');
     isRedisConnected = false;
-    return null;
-  }
-};
+  });
+
 
 /**
  * Check if Redis is available
@@ -214,8 +205,6 @@ const disconnectRedis = async () => {
 };
 
 module.exports = {
-  connectRedis,
-  disconnectRedis,
   isRedisAvailable,
   getRedisClient,
   setCache,

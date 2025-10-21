@@ -52,8 +52,6 @@ const RoomSchema = new mongoose.Schema({
   collection: 'rooms'
 });
 
-// Index for faster queries
-RoomSchema.index({ roomId: 1 });
 RoomSchema.index({ createdBy: 1 });
 RoomSchema.index({ 'participants.username': 1 });
 

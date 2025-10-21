@@ -23,6 +23,35 @@ require('./config/database');
 const app = express();
 const server = http.createServer(app);
 
+// Socket.IO configuration
+const io = new Server(server, {
+  cors: {
+    origin: [
+      'https://cunity.vercel.app',
+      'https://cu-sandy.vercel.app',
+      'https://cuni.vercel.app',
+      'http://localhost:5173',
+    ],
+    methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+  path: '/socket.io/',
+  transports: ['polling', 'websocket'],
+  pingTimeout: 30000,
+  pingInterval: 10000,
+  upgradeTimeout: 15000,
+  allowUpgrades: true,
+  cookie: false,
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+});
+
+// Make io available to routes via app.locals
+app.locals.io = io;
+
 // CORS configuration
 app.use(
   cors({
@@ -188,32 +217,6 @@ app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/auth', authRoutes);
-
-// Socket.IO configuration
-const io = new Server(server, {
-  cors: {
-    origin: [
-      'https://cunity.vercel.app',
-      'https://cu-sandy.vercel.app',
-      'https://cuni.vercel.app',
-      'http://localhost:5173',
-    ],
-    methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  },
-  path: '/socket.io/',
-  transports: ['polling', 'websocket'],
-  pingTimeout: 30000,
-  pingInterval: 10000,
-  upgradeTimeout: 15000,
-  allowUpgrades: true,
-  cookie: false,
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-});
 
 // Track active rooms
 const usersInRoom = {};

@@ -522,32 +522,44 @@ const Editor = () => {
         return;
       }
 
+      // Optimistically update UI immediately
+      setFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[fileName];
+        return newFiles;
+      });
+
+      // Clear editor if deleted file was open
+      if (currentFile === fileName) {
+        setCurrentFile(null);
+        setCode('');
+        localStorage.removeItem('lastOpenedFile');
+      }
+
+      // Delete from server
       const response = await axios.delete(`${BACKEND_URL}/api/files/${roomId}/${fileName}`);
 
       if (response.data.success) {
-        // Remove from files state
-        setFiles(prev => {
-          const newFiles = { ...prev };
-          delete newFiles[fileName];
-          return newFiles;
-        });
-
-        // Clear editor if deleted file was open
-        if (currentFile === fileName) {
-          setCurrentFile(null);
-          setCode('');
-          localStorage.removeItem('lastOpenedFile');
-        }
-
-        // Notify other users
-        socketRef.current?.emit('file-deleted', {
-          roomId,
-          fileName
-        });
+        // Server will broadcast to other users via socket
+        console.log('✅ File deleted successfully:', fileName);
       }
     } catch (error) {
       console.error('Error deleting file:', error);
       alert(`Failed to delete file: ${error.message}`);
+      
+      // Revert optimistic update on error - reload files
+      try {
+        const filesResponse = await axios.get(`${BACKEND_URL}/api/files/${roomId}`);
+        if (filesResponse.data.success) {
+          const filesData = {};
+          filesResponse.data.files.forEach(file => {
+            filesData[file.fileName] = file.content;
+          });
+          setFiles(filesData);
+        }
+      } catch (reloadError) {
+        console.error('Error reloading files:', reloadError);
+      }
     }
   };
 
@@ -573,44 +585,49 @@ const Editor = () => {
       // Get the current content
       const content = files[oldFileName] || '';
 
-      // Create new file with new name
-      const createResponse = await axios.post(`${BACKEND_URL}/api/files/${roomId}`, {
-        name: newFileName,
-        content: content,
+      // Optimistically update UI immediately
+      setFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[oldFileName];
+        newFiles[newFileName] = content;
+        return newFiles;
       });
 
-      if (createResponse.data.success) {
-        // Delete old file
-        await axios.delete(`${BACKEND_URL}/api/files/${roomId}/${oldFileName}`);
+      // Update current file if it was the renamed file
+      if (currentFile === oldFileName) {
+        setCurrentFile(newFileName);
+        localStorage.setItem('lastOpenedFile', newFileName);
+      }
 
-        // Update files state
-        setFiles(prev => {
-          const newFiles = { ...prev };
-          delete newFiles[oldFileName];
-          newFiles[newFileName] = content;
-          return newFiles;
+      try {
+        // Create new file with new name on server
+        const createResponse = await axios.post(`${BACKEND_URL}/api/files/${roomId}`, {
+          name: newFileName,
+          content: content,
         });
 
-        // Update current file if it was the renamed file
-        if (currentFile === oldFileName) {
-          setCurrentFile(newFileName);
-          localStorage.setItem('lastOpenedFile', newFileName);
+        if (createResponse.data.success) {
+          // Delete old file from server
+          await axios.delete(`${BACKEND_URL}/api/files/${roomId}/${oldFileName}`);
+          
+          console.log('✅ File renamed successfully:', oldFileName, '→', newFileName);
         }
-
-        // Notify other users about deletion and creation
-        socketRef.current?.emit('file-deleted', {
-          roomId,
-          fileName: oldFileName
-        });
-
-        socketRef.current?.emit('file-created', {
-          roomId,
-          fileName: newFileName,
-          content: content
-        });
+      } catch (error) {
+        console.error('Error renaming file on server:', error);
+        alert(`Failed to rename file: ${error.message}`);
+        
+        // Revert optimistic update on error - reload files
+        const filesResponse = await axios.get(`${BACKEND_URL}/api/files/${roomId}`);
+        if (filesResponse.data.success) {
+          const filesData = {};
+          filesResponse.data.files.forEach(file => {
+            filesData[file.fileName] = file.content;
+          });
+          setFiles(filesData);
+        }
       }
     } catch (error) {
-      console.error('Error renaming file:', error);
+      console.error('Error in rename process:', error);
       alert(`Failed to rename file: ${error.message}`);
     }
   };
@@ -785,24 +802,6 @@ const Editor = () => {
               </div>
             </div>
           </div>
-          
-          {/* Action Buttons */}
-          {activeTab === 'files' && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                const fileName = prompt('Enter file name:');
-                if (fileName) {
-                  handleAddNode(fileName, 'file');
-                }
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:from-pink-500/30 hover:to-purple-600/30 transition-all duration-200"
-            >
-              <FiPlus className="w-3 h-3" />
-              <span className="text-xs font-medium">New</span>
-            </motion.button>
-          )}
         </div>
 
         {/* Panel Content */}

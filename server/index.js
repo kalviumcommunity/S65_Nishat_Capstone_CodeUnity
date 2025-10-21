@@ -4,126 +4,64 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const File = require('./models/file');
-const TldrawState = require('./models/tldrawState'); // Add this import
+const TldrawState = require('./models/tldrawState');
 require('dotenv').config();
-const fileRoutes = require('./routes/files.js');
-const aiRoutes = require('./routes/ai-gemini.js'); // Gemini-only AI router
-const aiChatRoutes = require('./routes/aiChat.js'); // AI chat persistence routes
-const emailRoutes = require('./routes/email.js'); // Email routes
-const authRoutes = require('./routes/auth.js'); // Authentication routes
 
-// Import rate limiting middleware
+// Routes
+const fileRoutes = require('./routes/files.js');
+const aiRoutes = require('./routes/ai-gemini.js');
+const aiChatRoutes = require('./routes/aiChat.js');
+const emailRoutes = require('./routes/email.js');
+const authRoutes = require('./routes/auth.js');
+
+// Middleware
 const { globalLimiter, aiLimiter, codeExecutionLimiter, rateLimitMonitor } = require('./middleware/rateLimiter');
 
-// Connect to MongoDB with enhanced production configuration
-const MONGODB_URI = process.env.MONGODB_URI;
+// Configuration
+const { connectRedis, disconnectRedis, isRedisAvailable, getCacheStats } = require('./config/redis');
+const { connectDatabase, disconnectDatabase, setupDatabaseEvents, isDatabaseConnected } = require('./config/database');
 
-if (!MONGODB_URI) {
-  console.error('❌ MONGODB_URI environment variable is not set');
-  process.exit(1);
-}
-
-console.log('🔄 Attempting to connect to MongoDB...');
-console.log('📍 Environment:', process.env.NODE_ENV || 'development');
-
-// Disable global buffering at the mongoose level - CRITICAL for production
-mongoose.set('bufferCommands', false);
-
-// Enhanced MongoDB connection options for production stability  
-const mongooseOptions = {
-  // Connection timeouts
-  serverSelectionTimeoutMS: 60000, // 60 seconds for server selection
-  connectTimeoutMS: 60000, // 60 seconds for initial connection
-  socketTimeoutMS: 60000, // 60 seconds for socket operations
-  
-  // Mongoose-specific buffering configuration
-  bufferCommands: false, // Disable mongoose buffering
-  
-  // Connection pool settings
-  maxPoolSize: 10, // Maximum number of connections
-  minPoolSize: 1, // Minimum number of connections (reduce for serverless)
-  maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
-  
-  // Reliability settings
-  retryWrites: true, // Enable retryable writes
-  retryReads: true, // Enable retryable reads
-  w: 'majority', // Write concern
-  
-  // Heartbeat settings
-  heartbeatFrequencyMS: 10000, // Send heartbeat every 10 seconds
-  
-  // Additional serverless optimizations
-  maxConnecting: 2, // Limit concurrent connections
-  family: 4 // Use IPv4
-};
-
-mongoose
-  .connect(MONGODB_URI, mongooseOptions)
-  .then(() => {
-    console.log('✅ Connected to MongoDB successfully');
-    console.log('📡 Database connection is ready for requests');
-    console.log(`🔗 Connection state: ${mongoose.connection.readyState}`);
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    console.error('� Full error:', err);
-    console.error('🔄 Application will exit and restart...');
-    setTimeout(() => {
-      process.exit(1); // Exit and let the platform restart the service
-    }, 3000);
-  });
-
-// Handle connection events with enhanced logging
-mongoose.connection.on('connected', () => {
-  console.log('🔗 Mongoose connected to MongoDB');
-  console.log(`📊 Connection state: ${mongoose.connection.readyState}`);
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('❌ Mongoose connection error:', err.message);
-  console.error('🔍 Error type:', err.name);
-  console.error('📊 Connection state:', mongoose.connection.readyState);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('🔌 Mongoose disconnected from MongoDB');
-  console.log('📊 Connection state:', mongoose.connection.readyState);
-});
-
-mongoose.connection.on('reconnected', () => {
-  console.log('🔄 Mongoose reconnected to MongoDB');
-  console.log('📊 Connection state:', mongoose.connection.readyState);
-});
-
-mongoose.connection.on('timeout', () => {
-  console.log('⏰ MongoDB connection timeout');
-});
-
-mongoose.connection.on('close', () => {
-  console.log('🚪 MongoDB connection closed');
-});
-
-// Graceful shutdown handling
-process.on('SIGINT', async () => {
-  console.log('🛑 Received SIGINT, gracefully shutting down...');
+// Initialize database and cache
+(async () => {
   try {
-    await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed');
+    await connectDatabase();
+    setupDatabaseEvents();
+    
+    await connectRedis();
+    if (isRedisAvailable()) {
+      console.log('[INFO] Application running with Redis caching enabled');
+    } else {
+      console.log('[INFO] Application running without Redis caching');
+    }
+  } catch (error) {
+    console.error('[ERROR] Failed to connect:', error.message);
+    setTimeout(() => process.exit(1), 3000);
+  }
+})();
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('[INFO] Gracefully shutting down...');
+  try {
+    await disconnectRedis();
+    await disconnectDatabase();
+    console.log('[SUCCESS] All connections closed');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error during shutdown:', err);
+    console.error('[ERROR] Shutdown error:', err.message);
     process.exit(1);
   }
 });
 
 process.on('SIGTERM', async () => {
-  console.log('🛑 Received SIGTERM, gracefully shutting down...');
+  console.log('[INFO] Gracefully shutting down...');
   try {
-    await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed');
+    await disconnectRedis();
+    await disconnectDatabase();
+    console.log('[SUCCESS] All connections closed');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error during shutdown:', err);
+    console.error('[ERROR] Shutdown error:', err.message);
     process.exit(1);
   }
 });
@@ -131,6 +69,7 @@ process.on('SIGTERM', async () => {
 const app = express();
 const server = http.createServer(app);
 
+// CORS configuration
 app.use(
   cors({
     origin: [
@@ -144,16 +83,14 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 app.use(express.json());
-
-// Apply global rate limiter to all routes
-console.log('🛡️ Rate limiting enabled for API protection');
 app.use(globalLimiter);
-
-// Optional: Add rate limit monitoring for analytics
 app.use(rateLimitMonitor);
 
-// Enhanced health check endpoint
+console.log('[INFO] Rate limiting enabled for API protection');
+
+// Health check endpoint
 app.get('/health', async (req, res) => {
   const mongoStatus = mongoose.connection.readyState;
   const statusMap = {
@@ -163,11 +100,9 @@ app.get('/health', async (req, res) => {
     3: 'disconnecting'
   };
   
-  // Test database connectivity
   let dbTest = null;
   try {
     if (mongoStatus === 1) {
-      // Simple ping to test actual connectivity
       await mongoose.connection.db.admin().ping();
       dbTest = 'success';
     } else {
@@ -198,7 +133,7 @@ app.get('/health', async (req, res) => {
   res.status(httpStatus).json(healthData);
 });
 
-// Debug endpoint that works even when MongoDB is down
+// Debug endpoint
 app.get('/debug', (req, res) => {
   const mongoStatus = mongoose.connection.readyState;
   const statusMap = {
@@ -236,7 +171,25 @@ app.get('/debug', (req, res) => {
   res.json(debugInfo);
 });
 
-// Database connection status endpoint
+// Cache status endpoint
+app.get('/cache-status', async (req, res) => {
+  try {
+    const stats = await getCacheStats();
+    res.json({
+      success: true,
+      redis: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get cache stats',
+      error: error.message
+    });
+  }
+});
+
+// Database status endpoint
 app.get('/db-status', async (req, res) => {
   try {
     const mongoStatus = mongoose.connection.readyState;
@@ -248,7 +201,6 @@ app.get('/db-status', async (req, res) => {
       });
     }
     
-    // Test with a simple operation
     await mongoose.connection.db.admin().ping();
     
     res.json({
@@ -276,12 +228,14 @@ app.get('/', (req, res) => {
   });
 });
 
+// API routes
 app.use('/api/files', fileRoutes);
-app.use('/api/ai', aiLimiter, aiRoutes); // Apply AI-specific rate limiting
+app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/email', emailRoutes);
-app.use('/api/auth', authRoutes); // Authentication routes
+app.use('/api/auth', authRoutes);
 
+// Socket.IO configuration
 const io = new Server(server, {
   cors: {
     origin: [
@@ -307,21 +261,20 @@ const io = new Server(server, {
   reconnectionDelayMax: 5000,
 });
 
-// Track active rooms and their file lists
+// Track active rooms
 const usersInRoom = {};
 const rooms = new Map();
 const roomFiles = new Map();
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('[INFO] User connected:', socket.id);
 
   socket.on('join-room', async (data) => {
-    // Handle both formats: string roomId or object with roomId
     const roomId = typeof data === 'string' ? data : data.roomId;
     const username = typeof data === 'object' ? data.username : `User-${socket.id.slice(0, 4)}`;
     const isTldrawConnection = typeof data === 'object' ? data.isTldrawConnection : false;
     
-    console.log(`🚪 Join room: ${roomId} by ${username} (${socket.id}) ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
+    console.log(`[INFO] Join room: ${roomId} by ${username} (${socket.id}) ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
     
     socket.join(roomId);
     socket.username = username;
@@ -332,23 +285,20 @@ io.on('connection', (socket) => {
       usersInRoom[roomId] = [];
     }
 
-    // Add user to room - allow multiple connections per user (different tabs)
     if (!isTldrawConnection) {
       const existingUserIndex = usersInRoom[roomId].findIndex(u => u.socketId === socket.id);
       if (existingUserIndex === -1) {
         usersInRoom[roomId].push({ socketId: socket.id, username });
-        console.log(`✅ User ${username} added to room ${roomId}. Total users: ${usersInRoom[roomId].length}`);
+        console.log(`[SUCCESS] User ${username} added to room ${roomId}. Total users: ${usersInRoom[roomId].length}`);
       } else {
-        console.log(`🔄 User ${username} already exists in room ${roomId}`);
+        console.log(`[INFO] User ${username} already exists in room ${roomId}`);
       }
     }
 
-    // MongoDB-based TlDraw room handling
     try {
       let tldrawState = await TldrawState.findOne({ roomId });
       
       if (!tldrawState) {
-        // FIXED: Better default TlDraw state
         const emptyTldrawState = {
           store: {},
           schema: {
@@ -375,25 +325,20 @@ io.on('connection', (socket) => {
           stateVersion: 1
         });
         await tldrawState.save();
-        console.log(`✅ TlDraw room created in DB: ${roomId}`);
+        console.log(`[SUCCESS] TlDraw room created in DB: ${roomId}`);
       }
 
-      // Send initial state to all connections
-      console.log('📤 Sending initial TlDraw state');
+      console.log('[INFO] Sending initial TlDraw state');
       socket.emit('init-state', tldrawState.state);
 
-      // Send user list to all connections in room (not just main connections)
       if (!isTldrawConnection) {
-        console.log(`📋 Sending user list to room ${roomId}:`, usersInRoom[roomId]);
-        // Send to the joining user
+        console.log(`[INFO] Sending user list to room ${roomId}:`, usersInRoom[roomId]);
         socket.emit('update-user-list', usersInRoom[roomId]);
-        // Send to all other users in the room
         socket.to(roomId).emit('update-user-list', usersInRoom[roomId]);
       }
 
     } catch (error) {
-      console.error('❌ Error handling room join:', error);
-      // Send empty state on error
+      console.error('[ERROR] Error handling room join:', error);
       socket.emit('init-state', {
         store: {},
         schema: {
@@ -404,74 +349,60 @@ io.on('connection', (socket) => {
       });
     }
 
-    // Send existing messages and file list to the joining user (only for main connections)
     if (!isTldrawConnection) {
-    const roomMessages = rooms.get(roomId) || [];
-    socket.emit('chat-history', roomMessages);
+      const roomMessages = rooms.get(roomId) || [];
+      socket.emit('chat-history', roomMessages);
 
-    // Get latest file list from database and broadcast
-    try {
-      const files = await File.find({ roomId });
-      const fileList = files.map((f) => ({
-        fileName: f.fileName,
-        content: f.content,
-        updatedAt: f.updatedAt,
-      }));
+      try {
+        const files = await File.find({ roomId });
+        const fileList = files.map((f) => ({
+          fileName: f.fileName,
+          content: f.content,
+          updatedAt: f.updatedAt,
+        }));
 
-      // Store current file list in memory
-      roomFiles.set(roomId, fileList);
+        roomFiles.set(roomId, fileList);
+        io.to(roomId).emit('files-list-updated', { files: fileList });
+      } catch (error) {
+        console.error('[ERROR] Error getting files for room:', error);
+      }
 
-      // Send to all clients in room
-      io.to(roomId).emit('files-list-updated', { files: fileList });
-    } catch (error) {
-      console.error('Error getting files for room:', error);
-    }
-
-    // Notify other users that someone joined (not the user who joined)
-    socket.to(roomId).emit('user-joined', { username });
-    
-    // Add system message to chat about user joining
-    const joinMessage = {
-      type: 'system',
-      username: 'System',
-      text: `${username} joined the room`,
-      timestamp: new Date().toISOString(),
-      roomId
-    };
-    
-    // Save system message to room history
-    if (!rooms.has(roomId)) {
-      rooms.set(roomId, []);
-    }
-    rooms.get(roomId).push(joinMessage);
-    
-    // Broadcast join message to all users in room (including the one who joined)
-    io.to(roomId).emit('receive-message', joinMessage);
-    
-    // Update user list for all users in room
-    io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
+      socket.to(roomId).emit('user-joined', { username });
+      
+      const joinMessage = {
+        type: 'system',
+        username: 'System',
+        text: `${username} joined the room`,
+        timestamp: new Date().toISOString(),
+        roomId
+      };
+      
+      if (!rooms.has(roomId)) {
+        rooms.set(roomId, []);
+      }
+      rooms.get(roomId).push(joinMessage);
+      
+      io.to(roomId).emit('receive-message', joinMessage);
+      io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
     }
   });
 
-  // FIXED: Improved update handling with better error recovery
   socket.on('update', async (data) => {
     const roomId = data.roomId || socket.roomId;
     
     if (!roomId || !data.state) {
-      console.log('❌ TlDraw update ignored - missing roomId or state');
+      console.log('[ERROR] TlDraw update ignored - missing roomId or state');
       return;
     }
 
-    console.log('📥 Received TlDraw update for room:', roomId, 'from:', socket.id);
+    console.log('[INFO] Received TlDraw update for room:', roomId, 'from:', socket.id);
 
     try {
-      // FIXED: Better state validation
       if (!data.state.store || typeof data.state.store !== 'object') {
-        console.log('❌ Invalid TlDraw state structure:', typeof data.state.store);
+        console.log('[ERROR] Invalid TlDraw state structure:', typeof data.state.store);
         return;
       }
 
-      // Update state in MongoDB with retry logic
       let retries = 3;
       let result = null;
       
@@ -488,22 +419,21 @@ io.on('connection', (socket) => {
               new: true, 
               upsert: true,
               runValidators: true,
-              maxTimeMS: 5000 // 5 second timeout
+              maxTimeMS: 5000
             }
           );
           break;
         } catch (retryError) {
           retries--;
-          console.log(`❌ TlDraw update retry ${3-retries}/3:`, retryError.message);
+          console.log(`[ERROR] TlDraw update retry ${3-retries}/3:`, retryError.message);
           if (retries === 0) throw retryError;
-          await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 
       if (result) {
-        console.log('💾 TlDraw state updated in MongoDB for room:', roomId, 'version:', result.stateVersion);
+        console.log('[SUCCESS] TlDraw state updated in MongoDB for room:', roomId, 'version:', result.stateVersion);
         
-        // FIXED: Broadcast to all users in the room (exclude sender)
         socket.to(roomId).emit('update', {
           changes: data.changes,
           state: data.state,
@@ -512,42 +442,38 @@ io.on('connection', (socket) => {
           stateVersion: result.stateVersion
         });
         
-        console.log('📡 Broadcasting TlDraw update to room:', roomId);
+        console.log('[INFO] Broadcasting TlDraw update to room:', roomId);
       }
       
     } catch (error) {
-      console.error('❌ Error updating TlDraw state:', error);
+      console.error('[ERROR] Error updating TlDraw state:', error);
       
-      // Send error to client for recovery
       socket.emit('tldraw-error', { 
         message: 'Failed to save drawing', 
         roomId,
         error: error.message,
-        shouldReload: true // Indicate client should request fresh state
+        shouldReload: true
       });
       
-      // Try to send current state for recovery
       try {
         const currentState = await TldrawState.findOne({ roomId });
         if (currentState) {
           socket.emit('init-state', currentState.state);
         }
       } catch (recoveryError) {
-        console.error('❌ Error during TlDraw recovery:', recoveryError);
+        console.error('[ERROR] Error during TlDraw recovery:', recoveryError);
       }
     }
   });
 
   socket.on('file-created', async ({ roomId, fileName, content }) => {
     try {
-      // First save to MongoDB
       const file = await File.create({
         roomId,
         fileName,
         content: content || '',
       });
 
-      // Update room's file list in memory
       const roomFileList = roomFiles.get(roomId) || [];
       roomFileList.push({
         fileName: file.fileName,
@@ -556,19 +482,17 @@ io.on('connection', (socket) => {
       });
       roomFiles.set(roomId, roomFileList);
 
-      // Broadcast to ALL clients in the room
       io.to(roomId).emit('file-created', {
         fileName: file.fileName,
         content: file.content,
         updatedAt: file.createdAt,
       });
 
-      // Also send updated file list
       io.to(roomId).emit('files-list-updated', {
         files: roomFileList,
       });
     } catch (error) {
-      console.error('Error creating file:', error);
+      console.error('[ERROR] Error creating file:', error);
       socket.emit('file-error', {
         error: 'Failed to create file',
         details: error.message,
@@ -578,23 +502,18 @@ io.on('connection', (socket) => {
 
   socket.on('file-deleted', async ({ roomId, fileName }) => {
     try {
-      // Delete from MongoDB
       await File.findOneAndDelete({ roomId, fileName });
 
-      // Update room's file list in memory
       const roomFileList = roomFiles.get(roomId) || [];
       const updatedFileList = roomFileList.filter((f) => f.fileName !== fileName);
       roomFiles.set(roomId, updatedFileList);
 
-      // Broadcast deletion to all clients
       io.to(roomId).emit('file-deleted', { fileName });
-
-      // Send updated file list
       io.to(roomId).emit('files-list-updated', {
         files: updatedFileList,
       });
     } catch (error) {
-      console.error('Error deleting file:', error);
+      console.error('[ERROR] Error deleting file:', error);
       socket.emit('file-error', {
         error: 'Failed to delete file',
         details: error.message,
@@ -612,7 +531,6 @@ io.on('connection', (socket) => {
 
   socket.on('file-updated', async ({ roomId, fileName, content }) => {
     try {
-      // Update file in MongoDB after debounce
       const file = await File.findOneAndUpdate(
         { roomId, fileName },
         {
@@ -622,7 +540,6 @@ io.on('connection', (socket) => {
         { upsert: true, new: true }
       );
 
-      // Update room's file list in memory
       const roomFileList = roomFiles.get(roomId) || [];
       const fileIndex = roomFileList.findIndex((f) => f.fileName === fileName);
       if (fileIndex !== -1) {
@@ -633,14 +550,13 @@ io.on('connection', (socket) => {
         };
       }
 
-      // Confirm save to other clients
       socket.to(roomId).emit('file-updated', {
         fileName,
         content: file.content,
         updatedAt: file.updatedAt,
       });
     } catch (error) {
-      console.error('Error saving file:', error);
+      console.error('[ERROR] Error saving file:', error);
       socket.emit('file-error', {
         error: 'Failed to save file',
         details: error.message,
@@ -648,23 +564,22 @@ io.on('connection', (socket) => {
     }
   });
 
-  // --- CHAT SOCKET EVENTS ---
   socket.on('send-message', (message) => {
-    console.log('Received message from client:', message);
+    console.log('[INFO] Received message from client:', message);
     const { roomId } = message;
     if (!roomId) {
-      console.log('No roomId provided in message');
+      console.log('[ERROR] No roomId provided in message');
       return;
     }
-    // Save message to room history (per room)
+    
     if (!rooms.has(roomId)) {
       rooms.set(roomId, []);
     }
     rooms.get(roomId).push(message);
-    console.log('Broadcasting message to room:', roomId);
-    // Broadcast to all users in the room (including sender)
+    console.log('[INFO] Broadcasting message to room:', roomId);
+    
     io.to(roomId).emit('receive-message', message);
-    // Send notification to all users in the room except sender
+    
     socket.to(roomId).emit('chat-notification', {
       roomId,
       username: message.username,
@@ -674,20 +589,19 @@ io.on('connection', (socket) => {
   });
 
   socket.on('get-chat-history', ({ roomId }) => {
-    console.log('Client requesting chat history for room:', roomId);
+    console.log('[INFO] Client requesting chat history for room:', roomId);
     if (!roomId) return;
     const history = rooms.get(roomId) || [];
-    console.log('Sending chat history:', history.length, 'messages');
+    console.log('[INFO] Sending chat history:', history.length, 'messages');
     socket.emit('chat-history', history);
   });
 
   socket.on('disconnect', async () => {
     const roomId = socket.roomId;
     const isTldrawConnection = socket.isTldrawConnection;
-    console.log(`🔌 User disconnecting: ${socket.id} from room: ${roomId} ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
+    console.log(`[INFO] User disconnecting: ${socket.id} from room: ${roomId} ${isTldrawConnection ? '[TlDraw]' : '[Main]'}`);
     
     if (roomId && usersInRoom[roomId]) {
-      // Only remove from user list if it's a main connection
       if (!isTldrawConnection) {
         const leavingUser = usersInRoom[roomId].find(user => user.socketId === socket.id);
         
@@ -695,19 +609,16 @@ io.on('connection', (socket) => {
           (user) => user.socketId !== socket.id
         );
         
-        console.log(`🚪 User ${leavingUser?.username} left room ${roomId}. Remaining users: ${usersInRoom[roomId].length}`);
+        console.log(`[INFO] User ${leavingUser?.username} left room ${roomId}. Remaining users: ${usersInRoom[roomId].length}`);
         
         if (usersInRoom[roomId].length === 0) {
           delete usersInRoom[roomId];
         } else {
-          // Update user list for remaining users
           socket.to(roomId).emit('update-user-list', usersInRoom[roomId]);
           
-          // Notify remaining users that someone left
           if (leavingUser) {
             socket.to(roomId).emit('user-left', { username: leavingUser.username });
             
-            // Add system message to chat about user leaving
             const leaveMessage = {
               type: 'system',
               username: 'System',
@@ -716,21 +627,17 @@ io.on('connection', (socket) => {
               roomId: roomId
             };
             
-            // Save system message to room history
             if (!rooms.has(roomId)) {
               rooms.set(roomId, []);
             }
             rooms.get(roomId).push(leaveMessage);
             
-            // Broadcast leave message to remaining users
             socket.to(roomId).emit('receive-message', leaveMessage);
           }
           
-          // Update user list for remaining users
           io.to(roomId).emit('update-user-list', usersInRoom[roomId]);
         }
         
-        // Update user count in MongoDB
         try {
           await TldrawState.findOneAndUpdate(
             { roomId },
@@ -740,19 +647,18 @@ io.on('connection', (socket) => {
             }
           );
           
-          // Send updated user list to remaining users
           const usersList = usersInRoom[roomId] ? usersInRoom[roomId].map(u => u.socketId) : [];
           io.to(roomId).emit('users-list', usersList);
           
         } catch (error) {
-          console.error('❌ Error updating user count:', error);
+          console.error('[ERROR] Error updating user count:', error);
         }
       }
     }
   });
 });
 
-// Apply code execution rate limiting to the execute endpoint
+// Code execution endpoint
 app.post('/api/execute', codeExecutionLimiter, async (req, res) => {
   try {
     const { language, code } = req.body;
@@ -799,7 +705,7 @@ app.post('/api/execute', codeExecutionLimiter, async (req, res) => {
       throw new Error('Execution failed');
     }
   } catch (error) {
-    console.error('Code execution error:', error);
+    console.error('[ERROR] Code execution error:', error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -809,4 +715,4 @@ app.post('/api/execute', codeExecutionLimiter, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`[SUCCESS] Server running on port ${PORT}`));

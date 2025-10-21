@@ -6,6 +6,9 @@ const File = require('../models/file');
 // Import rate limiter
 const { fileOperationsLimiter } = require('../middleware/rateLimiter');
 
+// Import Redis cache
+const { getCache, setCache, deleteCache, deleteCachePattern, isRedisAvailable } = require('../config/redis');
+
 // In-memory fallback storage for when MongoDB is unavailable
 const memoryStore = new Map();
 
@@ -20,22 +23,37 @@ const testMongoConnection = async () => {
     await mongoose.connection.db.admin().ping();
     return true;
   } catch (error) {
-    console.warn('⚠️ MongoDB ping failed:', error.message);
+  console.warn(' MongoDB ping failed:', error.message);
     return false;
   }
 };
 
-// Get all files in a room
+// Get all files in a room with Redis caching
 router.get('/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
+    const cacheKey = `files:${roomId}`;
     
-    console.log(`📂 Getting files for room: ${roomId}`);
-    console.log(`🔍 MongoDB connection state: ${mongoose.connection.readyState}`);
+  console.log(` Getting files for room: ${roomId}`);
+    
+    // Try to get from Redis cache first
+    if (isRedisAvailable()) {
+      const cachedFiles = await getCache(cacheKey);
+      if (cachedFiles) {
+    console.log(` Serving files from Redis cache for room: ${roomId}`);
+        return res.json({
+          success: true,
+          files: cachedFiles,
+          cached: true
+        });
+      }
+    }
+    
+  console.log(` MongoDB connection state: ${mongoose.connection.readyState}`);
     
     // Check MongoDB connection status
     if (mongoose.connection.readyState !== 1) {
-      console.error('❌ MongoDB not connected for GET files, state:', mongoose.connection.readyState);
+   console.error(' MongoDB not connected for GET files, state:', mongoose.connection.readyState);
       return res.status(503).json({
         success: false,
         message: 'Database connection unavailable',
@@ -47,9 +65,9 @@ router.get('/:roomId', async (req, res) => {
     // Test connection with a quick ping
     try {
       await mongoose.connection.db.admin().ping();
-      console.log('✅ MongoDB ping successful for GET files');
+   console.log(' MongoDB ping successful for GET files');
     } catch (pingError) {
-      console.error('❌ MongoDB ping failed for GET files:', pingError.message);
+   console.error(' MongoDB ping failed for GET files:', pingError.message);
       return res.status(503).json({
         success: false,
         message: 'Database connection test failed',
@@ -69,14 +87,22 @@ router.get('/:roomId', async (req, res) => {
     const dbOperation = File.getByRoom(roomId);
     const files = await Promise.race([dbOperation, operationTimeout]);
     
-    console.log(`✅ Retrieved ${files.length} files for room: ${roomId}`);
+    const fileInfos = files.map(f => f.toFileInfo());
+    
+    // Cache the result in Redis for 5 minutes
+    if (isRedisAvailable()) {
+      await setCache(cacheKey, fileInfos, 300); // 5 minutes TTL
+    }
+    
+  console.log(` Retrieved ${files.length} files for room: ${roomId}`);
     res.json({ 
       success: true,
-      files: files.map(f => f.toFileInfo())
+      files: fileInfos,
+      cached: false
     });
   } catch (error) {
-    console.error('❌ Error getting files:', error.message);
-    console.error('🔍 Error details:', {
+  console.error(' Error getting files:', error.message);
+  console.error(' Error details:', {
       name: error.name,
       message: error.message,
       stack: error.stack?.split('\n')[0],
@@ -126,7 +152,7 @@ router.get('/:roomId/:filename', async (req, res) => {
       ...file.toFileInfo()
     });
   } catch (error) {
-    console.error('Error getting file:', error);
+  console.error('Error getting file:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get file',
@@ -148,12 +174,12 @@ router.post('/:roomId', fileOperationsLimiter, async (req, res) => {
       });
     }
 
-    console.log(`📝 Creating/updating file: ${fileName} in room: ${roomId}`);
-    console.log(`🔍 MongoDB connection state: ${mongoose.connection.readyState}`);
+  console.log(` Creating/updating file: ${fileName} in room: ${roomId}`);
+  console.log(` MongoDB connection state: ${mongoose.connection.readyState}`);
     
     // Check MongoDB connection status
     if (mongoose.connection.readyState !== 1) {
-      console.error('❌ MongoDB not connected, state:', mongoose.connection.readyState);
+   console.error(' MongoDB not connected, state:', mongoose.connection.readyState);
       return res.status(503).json({
         success: false,
         message: 'Database connection unavailable',
@@ -165,9 +191,9 @@ router.post('/:roomId', fileOperationsLimiter, async (req, res) => {
     // Test connection with a quick ping
     try {
       await mongoose.connection.db.admin().ping();
-      console.log('✅ MongoDB ping successful');
+   console.log(' MongoDB ping successful');
     } catch (pingError) {
-      console.error('❌ MongoDB ping failed:', pingError.message);
+   console.error(' MongoDB ping failed:', pingError.message);
       return res.status(503).json({
         success: false,
         message: 'Database connection test failed',
@@ -200,15 +226,21 @@ router.post('/:roomId', fileOperationsLimiter, async (req, res) => {
     
     const file = await Promise.race([dbOperation, operationTimeout]);
 
-    console.log(`✅ File operation successful: ${fileName}`);
+    // Invalidate cache for this room
+    if (isRedisAvailable()) {
+      await deleteCache(`files:${roomId}`);
+   console.log(` Cache invalidated for room: ${roomId}`);
+    }
+
+  console.log(` File operation successful: ${fileName}`);
     res.json({
       success: true,
       message: 'File saved successfully',
       ...file.toFileInfo()
     });
   } catch (error) {
-    console.error('❌ Error saving file:', error.message);
-    console.error('🔍 Error details:', {
+  console.error(' Error saving file:', error.message);
+  console.error(' Error details:', {
       name: error.name,
       message: error.message,
       stack: error.stack?.split('\n')[0],
@@ -257,13 +289,19 @@ router.delete('/:roomId/:filename', fileOperationsLimiter, async (req, res) => {
       });
     }
 
+    // Invalidate cache for this room
+    if (isRedisAvailable()) {
+      await deleteCache(`files:${roomId}`);
+   console.log(` Cache invalidated after file deletion in room: ${roomId}`);
+    }
+
     res.json({
       success: true,
       message: 'File deleted successfully',
       ...result.toFileInfo()
     });
   } catch (error) {
-    console.error('Error deleting file:', error);
+  console.error('Error deleting file:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete file',

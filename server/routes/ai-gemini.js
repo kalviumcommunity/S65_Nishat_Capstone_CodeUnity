@@ -16,7 +16,7 @@ const isGeminiAvailable = () => {
          process.env.GOOGLE_AI_API_KEY !== '';
   
   // Debug logging for production
-  console.log('🔍 AI Service Debug:', {
+ console.log(' AI Service Debug:', {
     hasKey: !!hasKey,
     genAI: !!genAI,
     keyLength: process.env.GOOGLE_AI_API_KEY ? process.env.GOOGLE_AI_API_KEY.length : 0
@@ -49,7 +49,7 @@ const queryGemini = async (prompt) => {
     
     return text;
   } catch (error) {
-    console.error('❌ Gemini API Error:', error.message);
+  console.error(' Gemini API Error:', error.message);
     throw new Error(`Gemini error: ${error.message}`);
   }
 };
@@ -231,7 +231,7 @@ router.post('/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Gemini chat error:', error);
+  console.error('Gemini chat error:', error);
     res.status(500).json({
       success: false,
       message: 'Gemini AI service error',
@@ -290,7 +290,7 @@ Respond in plain text with just the suggested code lines, properly indented. No 
     });
 
   } catch (error) {
-    console.error('Autocomplete error:', error);
+  console.error('Autocomplete error:', error);
     res.status(500).json({
       success: false,
       message: 'Autocomplete service error',

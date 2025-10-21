@@ -1,7 +1,5 @@
 # 🧑‍💻 CodeUnity: Real-Time Collaborative Coding Platform
 
-[**Live Demo**](https://cunity.vercel.app)
-
 > “CodeUnity empowers real-time collaboration and creativity—enabling developers to build, learn, and grow together.”
 
 ---

@@ -81,7 +81,7 @@ const FileExplorer = ({
             onClick={() => setIsCreating(true)}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-600/10 border border-pink-500/20 text-pink-400 hover:from-pink-500/20 hover:to-purple-600/20 hover:border-pink-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        >
             <FiPlus className="w-4 h-4" />
             <span className="font-medium">New File</span>
           </motion.button>

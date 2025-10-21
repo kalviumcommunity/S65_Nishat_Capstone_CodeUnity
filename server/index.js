@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
+const passport = require('passport');
 const { Server } = require('socket.io');
 const File = require('./models/file');
 const TldrawState = require('./models/tldrawState');
@@ -68,6 +69,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(passport.initialize());
 app.use(globalLimiter);
 app.use(rateLimitMonitor);
 

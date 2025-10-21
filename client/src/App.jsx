@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Editor from './pages/Editor';
+import AuthCallback from './pages/AuthCallback';
 
 const BACKEND_URL = import.meta.env.PROD 
   ? 'https://s65-nishat-capstone-codeunity-swbt.onrender.com'
@@ -23,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/editor/:roomId" element={<Editor />} />
+        <Route path="/auth-callback" element={<AuthCallback />} />
       </Routes>
     </BrowserRouter>
   );

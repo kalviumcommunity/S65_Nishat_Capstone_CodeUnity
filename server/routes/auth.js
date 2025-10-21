@@ -4,6 +4,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const GitHubStrategy = require('passport-github2').Strategy;
 const User = require('../models/user');
 const Room = require('../models/room');
 const OTP = require('../models/otp');
@@ -11,6 +15,129 @@ const router = express.Router();
 
 // Import rate limiters from middleware
 const { authLimiter, forgotPasswordLimiter } = require('../middleware/rateLimiter');
+
+// Passport.js Configuration
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8080/api/auth/google/callback'
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user exists with this Google ID
+        let user = await User.findByOAuth('google', profile.id);
+
+        if (!user) {
+          // Check if user exists with this email
+          user = await User.findOne({ email: profile.emails[0].value });
+
+          if (!user) {
+            // Create new user
+            const username = profile.displayName.toLowerCase().replace(/\s+/g, '') || `user_${profile.id}`;
+            user = new User({
+              username: username,
+              email: profile.emails[0].value,
+              oauth: {
+                google: {
+                  id: profile.id,
+                  email: profile.emails[0].value,
+                  name: profile.displayName,
+                  picture: profile.photos[0]?.value
+                }
+              }
+            });
+          } else {
+            // Link Google to existing user
+            user.oauth = user.oauth || {};
+            user.oauth.google = {
+              id: profile.id,
+              email: profile.emails[0].value,
+              name: profile.displayName,
+              picture: profile.photos[0]?.value
+            };
+          }
+        }
+
+        await user.save();
+        return done(null, user);
+      } catch (error) {
+        console.error('[ERROR] Google OAuth error:', error);
+        return done(error);
+      }
+    }
+  )
+);
+
+passport.use(
+  new GitHubStrategy(
+    {
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:8080/api/auth/github/callback'
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user exists with this GitHub ID
+        let user = await User.findByOAuth('github', profile.id);
+
+        if (!user) {
+          // Check if user exists with this email
+          const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+          if (email) {
+            user = await User.findOne({ email });
+          }
+
+          if (!user) {
+            // Create new user
+            const username = profile.username || `user_${profile.id}`;
+            user = new User({
+              username: username,
+              email: email,
+              oauth: {
+                github: {
+                  id: profile.id,
+                  username: profile.username,
+                  email: email,
+                  avatar_url: profile.photos[0]?.value
+                }
+              }
+            });
+          } else {
+            // Link GitHub to existing user
+            user.oauth = user.oauth || {};
+            user.oauth.github = {
+              id: profile.id,
+              username: profile.username,
+              email: email,
+              avatar_url: profile.photos[0]?.value
+            };
+          }
+        }
+
+        await user.save();
+        return done(null, user);
+      } catch (error) {
+        console.error('[ERROR] GitHub OAuth error:', error);
+        return done(error);
+      }
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});
 const requestCounts = new Map();
 
 // Configure nodemailer with production settings
@@ -766,6 +893,70 @@ router.post('/resend-otp', forgotPasswordLimiter, async (req, res) => {
       success: false,
       message: 'Failed to resend OTP. Please try again.'
     });
+  }
+});
+
+// ==================== OAuth Routes ====================
+
+// Google OAuth
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email']
+}));
+
+router.get('/google/callback', passport.authenticate('google', { session: false }), (req, res) => {
+  try {
+    if (!req.user) {
+      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}?error=auth_failed`);
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: req.user._id, username: req.user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    // Update last active
+    req.user.usage.lastActiveAt = new Date();
+    req.user.save().catch(err => console.error('Error updating user last active:', err));
+
+    // Redirect to frontend with token
+    const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-callback?token=${token}&username=${encodeURIComponent(req.user.username)}&email=${encodeURIComponent(req.user.email || '')}`;
+    res.redirect(redirectUrl);
+  } catch (error) {
+    console.error('[ERROR] Google OAuth callback error:', error);
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}?error=server_error`);
+  }
+});
+
+// GitHub OAuth
+router.get('/github', passport.authenticate('github', {
+  scope: ['user:email', 'read:user']
+}));
+
+router.get('/github/callback', passport.authenticate('github', { session: false }), (req, res) => {
+  try {
+    if (!req.user) {
+      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}?error=auth_failed`);
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: req.user._id, username: req.user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    // Update last active
+    req.user.usage.lastActiveAt = new Date();
+    req.user.save().catch(err => console.error('Error updating user last active:', err));
+
+    // Redirect to frontend with token
+    const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-callback?token=${token}&username=${encodeURIComponent(req.user.username)}&email=${encodeURIComponent(req.user.email || '')}`;
+    res.redirect(redirectUrl);
+  } catch (error) {
+    console.error('[ERROR] GitHub OAuth callback error:', error);
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}?error=server_error`);
   }
 });
 

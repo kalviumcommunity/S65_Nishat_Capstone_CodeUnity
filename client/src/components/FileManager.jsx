@@ -154,7 +154,7 @@ const FileExplorer = ({
               key={item.name}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`group ${renamingFile === item.name ? 'bg-pink-500/5' : ''}`}
+              className={`${renamingFile === item.name ? 'bg-pink-500/5' : ''}`}
             >
               {renamingFile === item.name ? (
                 // Rename Mode
@@ -202,7 +202,7 @@ const FileExplorer = ({
                 // Normal Mode
                 <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer ${
                   currentFile === item.name
-                    ? 'bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/40 shadow-lg shadow-pink-500/10'
+                    ? 'bg-linear-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/40 shadow-lg shadow-pink-500/10'
                     : 'hover:bg-pink-500/5 border border-transparent hover:border-pink-500/20'
                 }`}>
                   <button
@@ -220,7 +220,7 @@ const FileExplorer = ({
                   </button>
                   
                   {/* Action buttons */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex items-center gap-1 transition-opacity duration-200">
                     {/* Rename button */}
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -229,7 +229,7 @@ const FileExplorer = ({
                         e.stopPropagation();
                         startRename(item.name);
                       }}
-                      className="p-1.5 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 border border-transparent hover:border-blue-400/20 transition-all duration-200"
+                      className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 border border-transparent hover:border-red-400/20 transition-all duration-200"
                       title="Rename file"
                     >
                       <FiEdit2 className="w-3 h-3" />

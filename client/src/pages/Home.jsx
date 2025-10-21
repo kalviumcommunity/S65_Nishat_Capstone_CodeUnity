@@ -354,7 +354,7 @@ const Home = () => {
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500/15 to-purple-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
+                  className="w-full px-4 py-2.5 rounded-xl bg-linear-to-r from-pink-500/15 to-purple-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
                 >
                   <div className="flex items-center gap-2">
                     <FaUser className="w-4 h-4" />
@@ -402,167 +402,83 @@ const Home = () => {
           <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-2xl"></div>
         </div>
 
-        {/* Hero Section */}
-        <div className="relative z-10 px-6 lg:px-12 pt-8 pb-20">
-        {/* Radial gradient overlay for hero */}
-        <div className="absolute inset-0 bg-gradient-radial from-pink-400/15 via-purple-500/5 to-transparent opacity-50"></div>
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-20 items-center min-h-[75vh]">
-            {/* Left Content */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4 }}
-              className="space-y-8"
-            >
+        {/* Hero Section - Center Aligned with Gradient Semi-Circle */}
+        <div className="relative z-10 px-6 lg:px-12 pt-20 pb-32 overflow-hidden">
+          {/* Gradient Semi-Circle Background */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-pink-600/40 via-purple-600/30 to-transparent rounded-full blur-3xl -z-10"></div>
+
+          <div className="max-w-4xl mx-auto relative z-10">
+            <div className="text-center space-y-6">
               {/* Main Heading */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.05 }}
-                className="space-y-4"
+                transition={{ duration: 0.7 }}
+                className="text-6xl lg:text-7xl xl:text-8xl font-black leading-tight tracking-tight"
               >
-                <h1 className="text-5xl xl:text-7xl font-bold leading-[1.1] tracking-tight">
-                  <span className="text-white block mb-2">
-                    Code Together,
-                  </span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-pink-600 block mb-2">
-                    Build Faster
-                  </span>
-                  <span className="text-white block">
-                    With AI
-                  </span>
-                </h1>
-              </motion.div>
+                <span className="block text-white mb-2">Code Together.</span>
+                <span className="block text-transparent bg-clip-text bg-linear-to-r from-pink-700 via-purple-300 to-pink-900 mb-2">Build Faster.</span>
+                <span className="block text-white">With AI Power.</span>
+              </motion.h1>
 
               {/* Description */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="text-gray-400 text-xl leading-relaxed max-w-2xl"
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed"
               >
-                Experience the future of collaborative coding. Real-time synchronization, 
-                AI-powered assistance, and seamless team collaboration in one platform.
+                Real-time code synchronization, AI-powered suggestions, and seamless team collaboration. Everything you need to build amazing projects together.
               </motion.p>
 
               {/* CTA Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                className="flex flex-col sm:flex-row gap-4 pt-4"
+                transition={{ duration: 0.7, delay: 0.15 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
               >
                 <motion.button
-                  whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(236, 72, 153, 0.3)" }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-lg transition-all duration-300"
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={createRoom}
+                  className="px-10 py-4 rounded-lg bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 border border-pink-400/30 hover:border-pink-400/60 transition-all duration-300"
                 >
-                  Start Coding Now
+                  Start Building
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-8 py-4 rounded-2xl border border-gray-600/50 text-gray-300 font-semibold text-lg hover:bg-gray-800/30 hover:border-gray-500 transition-all duration-300"
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => joinRoomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  className="px-10 py-4 rounded-lg border-2 border-gray-600 text-gray-300 font-bold hover:bg-gray-900/50 hover:border-gray-500 transition-all duration-300"
                 >
-                  View Demo
+                  Join Room
                 </motion.button>
               </motion.div>
 
               {/* Stats */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-                className="flex items-center gap-8 pt-8 border-t border-gray-800/50"
+                transition={{ duration: 0.7, delay: 0.25 }}
+                className="grid grid-cols-3 gap-8 pt-16 border-t border-gray-800/50"
               >
-                <div className="text-center">
-                  <div className="text-white text-2xl font-bold">50K+</div>
-                  <div className="text-gray-500 text-sm">Developers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-white text-2xl font-bold">10K+</div>
-                  <div className="text-gray-500 text-sm">Projects</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-white text-2xl font-bold">100+</div>
-                  <div className="text-gray-500 text-sm">Languages</div>
-                </div>
+                <motion.div whileHover={{ y: -5 }} className="space-y-2">
+                  <div className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-pink-400 to-pink-300">50K+</div>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">Active Users</p>
+                </motion.div>
+                <motion.div whileHover={{ y: -5 }} className="space-y-2">
+                  <div className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-purple-300">10K+</div>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">Live Projects</p>
+                </motion.div>
+                <motion.div whileHover={{ y: -5 }} className="space-y-2">
+                  <div className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-pink-300 to-purple-300">100+</div>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">Languages</p>
+                </motion.div>
               </motion.div>
-            </motion.div>
-
-            {/* Right Side - Simplified Visual */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="relative flex items-center justify-center -mt-12"
-            >
-              {/* Main Visual Container */}
-              <div className="relative">
-                {/* Central Code Block */}
-                <div className="relative bg-gray-900/60 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/30 max-w-sm mx-auto">
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    </div>
-                    <span className="text-gray-400 text-xs font-mono">CodeUnity.js</span>
-                  </div>
-
-                  {/* Code Content */}
-                  <div className="space-y-3 font-mono text-sm">
-                    <div className="text-purple-400">function <span className="text-blue-400">collaborate</span>() {'{'}</div>
-                    <div className="pl-4 text-gray-300">const <span className="text-green-400">team</span> = <span className="text-orange-400">new</span> <span className="text-blue-400">CodeUnity</span>();</div>
-                    <div className="pl-4 text-gray-300">team.<span className="text-pink-400">enableAI</span>();</div>
-                    <div className="pl-4 text-gray-300"><span className="text-purple-400">return</span> team.<span className="text-pink-400">code</span>();</div>
-                    <div className="text-purple-400">{'}'}</div>
-                  </div>
-
-                  {/* AI Indicator */}
-                  <div className="mt-6 flex items-center gap-3 p-3 bg-pink-500/10 rounded-xl border border-pink-500/20">
-                    <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">AI</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-white text-sm font-medium">AI Assistant Active</div>
-                      <div className="text-gray-400 text-xs">Ready to help with your code</div>
-                    </div>
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  </div>
-                </div>
-
-                {/* Floating Elements - Simplified */}
-                <motion.div
-                  animate={{ 
-                    y: [0, -8, 0],
-                    rotate: [0, 5, 0]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-6 -right-6 w-12 h-12 bg-pink-500/20 rounded-2xl backdrop-blur-sm border border-pink-500/30 flex items-center justify-center"
-                >
-                  <span className="text-pink-400 text-lg">⚡</span>
-                </motion.div>
-                
-                <motion.div
-                  animate={{ 
-                    y: [0, 8, 0],
-                    rotate: [0, -5, 0]
-                  }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -bottom-6 -left-6 w-10 h-10 bg-purple-500/20 rounded-xl backdrop-blur-sm border border-purple-500/30 flex items-center justify-center"
-                >
-                  <span className="text-purple-400">🚀</span>
-                </motion.div>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Join Room Section */}
       <div className="relative z-10 px-6 lg:px-12 pb-24">

@@ -139,7 +139,7 @@ const roomCreationLimiter = rateLimit({
     message: 'Too many rooms created. Please try again later.'
   },
   handler: (req, res) => {
-    console.log(`🚪 Room creation rate limit exceeded for IP: ${req.ip}`);
+    console.log(`[RATE LIMIT] Room creation limit exceeded for IP: ${req.ip}`);
     res.status(429).json({
       success: false,
       message: 'Room creation limit reached. You can create 10 rooms per hour.',
@@ -164,7 +164,7 @@ const createCustomLimiter = (windowMs, max, message) => {
 const rateLimitMonitor = (req, res, next) => {
   const rateLimit = req.rateLimit;
   if (rateLimit) {
-    console.log(`📊 Rate Limit Status for ${req.ip} on ${req.path}:`, {
+    console.log(`[RATE LIMIT] Status for ${req.ip} on ${req.path}:`, {
       limit: rateLimit.limit,
       current: rateLimit.current,
       remaining: rateLimit.remaining,

@@ -229,10 +229,20 @@ router.post('/:roomId', fileOperationsLimiter, async (req, res) => {
     // Invalidate cache for this room
     if (isRedisAvailable()) {
       await deleteCache(`files:${roomId}`);
-   console.log(` Cache invalidated for room: ${roomId}`);
+      console.log(`[CACHE] Cache invalidated for room: ${roomId}`);
     }
 
-  console.log(` File operation successful: ${fileName}`);
+    // Broadcast file creation to other users in the room
+    const io = req.app.locals.io;
+    if (io) {
+      io.to(roomId).emit('file-created', { 
+        fileName: fileName,
+        content: content || ''
+      });
+      console.log(`[SOCKET] Broadcasted file-created for ${fileName} to room ${roomId}`);
+    }
+
+    console.log(`[SUCCESS] File operation successful: ${fileName}`);
     res.json({
       success: true,
       message: 'File saved successfully',
@@ -292,7 +302,14 @@ router.delete('/:roomId/:filename', fileOperationsLimiter, async (req, res) => {
     // Invalidate cache for this room
     if (isRedisAvailable()) {
       await deleteCache(`files:${roomId}`);
-   console.log(` Cache invalidated after file deletion in room: ${roomId}`);
+      console.log(`[CACHE] Cache invalidated after file deletion in room: ${roomId}`);
+    }
+
+    // Broadcast file deletion to other users in the room
+    const io = req.app.locals.io;
+    if (io) {
+      io.to(roomId).emit('file-deleted', { fileName: filename });
+      console.log(`[SOCKET] Broadcasted file-deleted for ${filename} to room ${roomId}`);
     }
 
     res.json({
@@ -301,7 +318,7 @@ router.delete('/:roomId/:filename', fileOperationsLimiter, async (req, res) => {
       ...result.toFileInfo()
     });
   } catch (error) {
-  console.error('Error deleting file:', error);
+    console.error('[ERROR] Error deleting file:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete file',

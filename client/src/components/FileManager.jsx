@@ -72,16 +72,16 @@ const FileExplorer = ({
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
-      {/* Add File Button */}
+      {/* Add File Button - Only show if not creating */}
       {!isCreating && (
-        <div className="p-4 border-b border-pink-500/10">
+        <div className="p-4">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setIsCreating(true)}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-600/10 border border-pink-500/20 text-pink-400 hover:from-pink-500/20 hover:to-purple-600/20 hover:border-pink-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        >
             <FiPlus className="w-4 h-4" />
             <span className="font-medium">New File</span>
           </motion.button>
@@ -95,7 +95,7 @@ const FileExplorer = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-4 border-b border-pink-500/10 bg-pink-500/5"
+            className="p-4 bg-pink-500/5"
           >
             <form onSubmit={handleCreate} className="space-y-3">
               <input
@@ -154,7 +154,7 @@ const FileExplorer = ({
               key={item.name}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`group ${renamingFile === item.name ? 'bg-pink-500/5' : ''}`}
+              className={`${renamingFile === item.name ? 'bg-pink-500/5' : ''}`}
             >
               {renamingFile === item.name ? (
                 // Rename Mode
@@ -200,27 +200,27 @@ const FileExplorer = ({
                 </div>
               ) : (
                 // Normal Mode
-                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   currentFile === item.name
-                    ? 'bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/40 shadow-lg shadow-pink-500/10'
+                    ? 'bg-linear-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/40 shadow-lg shadow-pink-500/10'
                     : 'hover:bg-pink-500/5 border border-transparent hover:border-pink-500/20'
                 }`}>
+                  <FiFile className={`w-4 h-4 shrink-0 ${
+                    currentFile === item.name ? 'text-pink-400' : 'text-gray-400'
+                  } transition-colors duration-200`} />
                   <button
                     onClick={() => onFileClick(item.name)}
-                    className="flex items-center gap-3 flex-1 min-w-0"
+                    className="flex-1 text-left min-w-0"
                   >
-                    <FiFile className={`w-4 h-4 shrink-0 ${
-                      currentFile === item.name ? 'text-pink-400' : 'text-gray-400 group-hover:text-pink-400'
-                    } transition-colors duration-200`} />
                     <span className={`truncate text-sm ${
-                      currentFile === item.name ? 'text-white font-medium' : 'text-gray-300 group-hover:text-white'
+                      currentFile === item.name ? 'text-white font-medium' : 'text-gray-300'
                     } transition-colors duration-200`}>
                       {item.name}
                     </span>
                   </button>
                   
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  {/* Action buttons - always visible */}
+                  <div className="flex items-center gap-1 shrink-0">
                     {/* Rename button */}
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -229,7 +229,7 @@ const FileExplorer = ({
                         e.stopPropagation();
                         startRename(item.name);
                       }}
-                      className="p-1.5 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 border border-transparent hover:border-blue-400/20 transition-all duration-200"
+                      className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 border border-transparent hover:border-red-400/20 transition-all duration-200"
                       title="Rename file"
                     >
                       <FiEdit2 className="w-3 h-3" />

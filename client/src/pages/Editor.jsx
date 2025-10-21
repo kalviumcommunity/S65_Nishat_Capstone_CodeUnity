@@ -551,6 +551,70 @@ const Editor = () => {
     }
   };
 
+  const handleRenameNode = async (oldFileName, newFileName) => {
+    try {
+      if (!oldFileName || !newFileName || !roomId) {
+        console.error('Missing parameters:', { oldFileName, newFileName, roomId });
+        return;
+      }
+
+      // Validate new file name
+      if (newFileName.trim() === '') {
+        alert('File name cannot be empty');
+        return;
+      }
+
+      // Check if file with new name already exists
+      if (files[newFileName] && newFileName !== oldFileName) {
+        alert('A file with this name already exists');
+        return;
+      }
+
+      // Get the current content
+      const content = files[oldFileName] || '';
+
+      // Create new file with new name
+      const createResponse = await axios.post(`${BACKEND_URL}/api/files/${roomId}`, {
+        name: newFileName,
+        content: content,
+      });
+
+      if (createResponse.data.success) {
+        // Delete old file
+        await axios.delete(`${BACKEND_URL}/api/files/${roomId}/${oldFileName}`);
+
+        // Update files state
+        setFiles(prev => {
+          const newFiles = { ...prev };
+          delete newFiles[oldFileName];
+          newFiles[newFileName] = content;
+          return newFiles;
+        });
+
+        // Update current file if it was the renamed file
+        if (currentFile === oldFileName) {
+          setCurrentFile(newFileName);
+          localStorage.setItem('lastOpenedFile', newFileName);
+        }
+
+        // Notify other users about deletion and creation
+        socketRef.current?.emit('file-deleted', {
+          roomId,
+          fileName: oldFileName
+        });
+
+        socketRef.current?.emit('file-created', {
+          roomId,
+          fileName: newFileName,
+          content: content
+        });
+      }
+    } catch (error) {
+      console.error('Error renaming file:', error);
+      alert(`Failed to rename file: ${error.message}`);
+    }
+  };
+
   // Add this useEffect to handle file cleanup on component unmount
   useEffect(() => {
     return () => {
@@ -754,6 +818,7 @@ const Editor = () => {
               currentFile={currentFile}
               onFileClick={handleFileClick}
               onAdd={handleAddNode}
+              onRename={handleRenameNode}
               onDelete={handleDeleteNode}
               className="h-full p-4"
             />

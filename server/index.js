@@ -1,11 +1,10 @@
+require("dotenv").config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const File = require('./models/file');
 const TldrawState = require('./models/tldrawState');
-require('dotenv').config();
 
 // Routes
 const fileRoutes = require('./routes/files.js');
@@ -18,53 +17,8 @@ const authRoutes = require('./routes/auth.js');
 const { globalLimiter, aiLimiter, codeExecutionLimiter, rateLimitMonitor } = require('./middleware/rateLimiter');
 
 // Configuration
-const { connectRedis, disconnectRedis, isRedisAvailable, getCacheStats } = require('./config/redis');
-const { connectDatabase, disconnectDatabase, setupDatabaseEvents, isDatabaseConnected } = require('./config/database');
-
-// Initialize database and cache
-(async () => {
-  try {
-    await connectDatabase();
-    setupDatabaseEvents();
-    
-    await connectRedis();
-    if (isRedisAvailable()) {
-      console.log('[INFO] Application running with Redis caching enabled');
-    } else {
-      console.log('[INFO] Application running without Redis caching');
-    }
-  } catch (error) {
-    console.error('[ERROR] Failed to connect:', error.message);
-    setTimeout(() => process.exit(1), 3000);
-  }
-})();
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('[INFO] Gracefully shutting down...');
-  try {
-    await disconnectRedis();
-    await disconnectDatabase();
-    console.log('[SUCCESS] All connections closed');
-    process.exit(0);
-  } catch (err) {
-    console.error('[ERROR] Shutdown error:', err.message);
-    process.exit(1);
-  }
-});
-
-process.on('SIGTERM', async () => {
-  console.log('[INFO] Gracefully shutting down...');
-  try {
-    await disconnectRedis();
-    await disconnectDatabase();
-    console.log('[SUCCESS] All connections closed');
-    process.exit(0);
-  } catch (err) {
-    console.error('[ERROR] Shutdown error:', err.message);
-    process.exit(1);
-  }
-});
+const { isRedisAvailable, getCacheStats } = require('./config/redis');
+require('./config/database');
 
 const app = express();
 const server = http.createServer(app);
@@ -715,4 +669,6 @@ app.post('/api/execute', codeExecutionLimiter, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`[SUCCESS] Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`[SUCCESS] Server running on port ${PORT}`);
+});

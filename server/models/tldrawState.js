@@ -71,8 +71,7 @@ const tldrawStateSchema = new mongoose.Schema({
   }
 });
 
-// Add indexes for better performance
-tldrawStateSchema.index({ roomId: 1 });
+// Add indexes for better performance (roomId already has unique index from schema)
 tldrawStateSchema.index({ lastUpdate: -1 });
 tldrawStateSchema.index({ lastChangeTimestamp: -1 });
 tldrawStateSchema.index({ isActive: 1 });

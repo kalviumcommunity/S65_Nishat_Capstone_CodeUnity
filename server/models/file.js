@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const FileSchema = new mongoose.Schema({
   roomId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   fileName: {
     type: String,

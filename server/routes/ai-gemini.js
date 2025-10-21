@@ -32,8 +32,9 @@ const queryGemini = async (prompt) => {
   }
   
   try {
+    // Use the correct model name for Gemini API
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-pro', // Fixed: Changed from 'gemini-1.5-flash' to 'gemini-pro'
       generationConfig: {
         temperature: 0.7, // Balanced creativity and accuracy
         topP: 0.8,
@@ -48,6 +49,7 @@ const queryGemini = async (prompt) => {
     
     return text;
   } catch (error) {
+    console.error('❌ Gemini API Error:', error.message);
     throw new Error(`Gemini error: ${error.message}`);
   }
 };
@@ -218,7 +220,7 @@ router.post('/chat', async (req, res) => {
     res.json({
       success: true,
       response: improvedResponse,
-      aiService: 'gemini-1.5-flash',
+      aiService: 'gemini-pro',
       message: 'Powered by CodeUnity AI (Google Gemini)',
       metadata: {
         hasCode: !!code,
@@ -325,7 +327,7 @@ router.get('/status', async (req, res) => {
         gemini: geminiAvailable,
         fallback: false // No fallback in Gemini-only system
       },
-      model: 'Google Gemini 1.5 Flash',
+      model: 'Google Gemini Pro',
       capabilities: [
         'General AI chat and conversation',
         'Code questions and guidance',

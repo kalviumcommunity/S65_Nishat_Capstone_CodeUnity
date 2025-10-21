@@ -2,6 +2,9 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const router = express.Router();
 
+// Import rate limiter
+const { emailLimiter } = require('../middleware/rateLimiter');
+
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -24,7 +27,7 @@ const createCustomTransporter = () => {
   });
 };
 
-router.post('/share-room', async (req, res) => {
+router.post('/share-room', emailLimiter, async (req, res) => {
   try {
     const { 
       recipientEmail, 

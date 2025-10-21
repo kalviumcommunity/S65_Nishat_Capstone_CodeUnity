@@ -86,9 +86,7 @@ const UserSchema = new mongoose.Schema({
   collection: 'users'
 });
 
-// Indexes
-UserSchema.index({ username: 1 });
-UserSchema.index({ email: 1 });
+// Indexes (username and email unique indexes are defined in schema)
 UserSchema.index({ 'oauth.google.id': 1 });
 UserSchema.index({ 'oauth.github.id': 1 });
 UserSchema.index({ 'oauth.discord.id': 1 });

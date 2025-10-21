@@ -12,6 +12,9 @@ const aiChatRoutes = require('./routes/aiChat.js'); // AI chat persistence route
 const emailRoutes = require('./routes/email.js'); // Email routes
 const authRoutes = require('./routes/auth.js'); // Authentication routes
 
+// Import rate limiting middleware
+const { globalLimiter, aiLimiter, codeExecutionLimiter, rateLimitMonitor } = require('./middleware/rateLimiter');
+
 // Connect to MongoDB with enhanced production configuration
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -143,6 +146,13 @@ app.use(
 );
 app.use(express.json());
 
+// Apply global rate limiter to all routes
+console.log('🛡️ Rate limiting enabled for API protection');
+app.use(globalLimiter);
+
+// Optional: Add rate limit monitoring for analytics
+app.use(rateLimitMonitor);
+
 // Enhanced health check endpoint
 app.get('/health', async (req, res) => {
   const mongoStatus = mongoose.connection.readyState;
@@ -267,7 +277,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/files', fileRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiLimiter, aiRoutes); // Apply AI-specific rate limiting
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/auth', authRoutes); // Authentication routes
@@ -742,7 +752,8 @@ io.on('connection', (socket) => {
   });
 });
 
-app.post('/api/execute', async (req, res) => {
+// Apply code execution rate limiting to the execute endpoint
+app.post('/api/execute', codeExecutionLimiter, async (req, res) => {
   try {
     const { language, code } = req.body;
 

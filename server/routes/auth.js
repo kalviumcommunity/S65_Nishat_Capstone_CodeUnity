@@ -9,7 +9,8 @@ const Room = require('../models/room');
 const OTP = require('../models/otp');
 const router = express.Router();
 
-// Production-ready rate limiting storage
+// Import rate limiters from middleware
+const { authLimiter, forgotPasswordLimiter } = require('../middleware/rateLimiter');
 const requestCounts = new Map();
 
 // Configure nodemailer with production settings
@@ -91,8 +92,8 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Sign up route
-router.post('/signup', async (req, res) => {
+// Sign up route with rate limiting
+router.post('/signup', authLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -171,8 +172,8 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login route
-router.post('/login', async (req, res) => {
+// Login route with rate limiting (protects against brute force attacks)
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -382,8 +383,8 @@ router.get('/verify', authenticateToken, async (req, res) => {
   });
 });
 
-// Forgot password - request OTP
-router.post('/forgot-password', rateLimitForgotPassword, async (req, res) => {
+// Forgot password - request OTP with enhanced rate limiting
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -660,8 +661,8 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// Resend OTP
-router.post('/resend-otp', rateLimitForgotPassword, async (req, res) => {
+// Resend OTP with rate limiting
+router.post('/resend-otp', forgotPasswordLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 

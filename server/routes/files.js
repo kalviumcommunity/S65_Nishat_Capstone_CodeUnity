@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const File = require('../models/file');
 
+// Import rate limiter
+const { fileOperationsLimiter } = require('../middleware/rateLimiter');
+
 // In-memory fallback storage for when MongoDB is unavailable
 const memoryStore = new Map();
 
@@ -132,8 +135,8 @@ router.get('/:roomId/:filename', async (req, res) => {
   }
 });
 
-// Create or update file with enhanced error handling
-router.post('/:roomId', async (req, res) => {
+// Create or update file with enhanced error handling and rate limiting
+router.post('/:roomId', fileOperationsLimiter, async (req, res) => {
   try {
     const { roomId } = req.params;
     const { name: fileName, content } = req.body;
@@ -241,8 +244,8 @@ router.post('/:roomId', async (req, res) => {
   }
 });
 
-// Delete file
-router.delete('/:roomId/:filename', async (req, res) => {
+// Delete file with rate limiting
+router.delete('/:roomId/:filename', fileOperationsLimiter, async (req, res) => {
   try {
     const { roomId, filename } = req.params;
     const result = await File.findOneAndDelete({ roomId, fileName: filename });

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import MonacoEditor from '@monaco-editor/react';
@@ -722,6 +722,36 @@ const Editor = () => {
       throw error; // Throw the error so CodeRunner can handle it
     }
   };
+  const handleDownloadProject = async () => {
+    try {
+      // Create a new JSZip instance
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      
+      // Add all files to the zip
+      Object.keys(files).forEach((fileName) => {
+        zip.file(fileName, files[fileName]);
+      });
+      
+      // Generate the zip file
+      const content = await zip.generateAsync({ type: 'blob' });
+      
+      // Create a download link
+      const url = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `project-${roomId}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading project:', error);
+      alert('Failed to download project. Please try again.');
+    }
+  };
 
   // Handle authentication
   const handleAuth = async (userData) => {
@@ -1009,6 +1039,17 @@ const Editor = () => {
                   </div>
                 )}
                 
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleDownloadProject}
+                  className="p-2.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 hover:border-pink-500/30 text-pink-400 transition-all duration-200 group"
+                  title="Download Project"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 group-hover:animate-pulse" fill="none" viewBox="0 0 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

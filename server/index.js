@@ -4,6 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const passport = require('passport');
 const { Server } = require('socket.io');
+const mongoose = require('mongoose');
 const File = require('./models/file');
 const TldrawState = require('./models/tldrawState');
 

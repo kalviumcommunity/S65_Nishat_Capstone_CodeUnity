@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPaperPlane, FaCircle } from 'react-icons/fa';
+import DOMPurify from 'dompurify';
 
 const ChatBox = ({ socket, roomId, username, onMessageReceived }) => {
   const [messages, setMessages] = useState([]);
@@ -38,13 +39,23 @@ const ChatBox = ({ socket, roomId, username, onMessageReceived }) => {
 
     // Listen for chat history
     const onChatHistory = (history) => {
-      setMessages(history || []);
+      // Sanitize all messages in history
+      const sanitizedHistory = (history || []).map(msg => ({
+        ...msg,
+        text: sanitizeMessage(msg.text || '')
+      }));
+      setMessages(sanitizedHistory);
       setTimeout(scrollToBottom, 100);
     };
 
     // Listen for new messages
     const onReceiveMessage = (message) => {
-      setMessages(prev => [...prev, message]);
+      // Sanitize incoming message
+      const sanitizedMessage = {
+        ...message,
+        text: sanitizeMessage(message.text || '')
+      };
+      setMessages(prev => [...prev, sanitizedMessage]);
       setTimeout(scrollToBottom, 50);
       onMessageReceived?.();
     };
@@ -68,16 +79,28 @@ const ChatBox = ({ socket, roomId, username, onMessageReceived }) => {
     };
   }, [socket, roomId, username, onMessageReceived]);
 
+  // Sanitize message text to prevent XSS attacks
+  const sanitizeMessage = (message) => {
+    return DOMPurify.sanitize(message, {
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: [],
+      KEEP_CONTENT: true
+    });
+  };
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !socket || !isConnected) {
       return;
     }
 
+    // Sanitize the message before sending
+    const sanitizedText = sanitizeMessage(newMessage.trim());
+    
     const messageData = {
       roomId,
       username,
-      text: newMessage.trim(),
+      text: sanitizedText,
       timestamp: new Date().toISOString()
     };
 
@@ -129,9 +152,9 @@ const ChatBox = ({ socket, roomId, username, onMessageReceived }) => {
                     {msg.username === username ? 'You' : msg.username}
                   </div>
                   <div
-                    className={`p-3 rounded-2xl backdrop-blur-sm break-words ${
+                    className={`p-3 rounded-2xl backdrop-blur-sm wrap-break-word ${
                       msg.username === username
-                        ? 'bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-white'
+                        ? 'bg-linear-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-white'
                         : 'bg-gray-800/60 border border-gray-700/30 text-gray-100'
                     }`}
                   >

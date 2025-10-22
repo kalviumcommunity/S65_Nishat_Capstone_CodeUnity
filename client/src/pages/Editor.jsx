@@ -1175,9 +1175,6 @@ const Editor = () => {
       {/* Notification Container */}
       <NotificationContainer />
       
-      {/* Notification Container */}
-      <NotificationContainer />
-      
       {/* Share Modal - Portal style overlay */}
       <AnimatePresence>
         {showShareModal && (

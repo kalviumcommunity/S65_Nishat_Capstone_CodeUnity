@@ -6,6 +6,13 @@ const tldrawStateSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  // New reference to Room document
+  roomRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Room',
+    required: false,
+    index: true
+  },
   state: {
     type: mongoose.Schema.Types.Mixed,
     required: false,
@@ -92,6 +99,19 @@ tldrawStateSchema.pre('findOneAndUpdate', function(next) {
     $inc: { changeCount: 1 }
   });
   next();
+});
+// Pre-save: populate roomRef from roomId if possible
+tldrawStateSchema.pre('save', async function(next) {
+  try {
+    if (!this.roomRef && this.roomId) {
+      const Room = require('./room');
+      const room = await Room.findOne({ roomId: this.roomId });
+      if (room) this.roomRef = room._id;
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = mongoose.model('TldrawState', tldrawStateSchema);

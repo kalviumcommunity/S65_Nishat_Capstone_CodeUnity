@@ -6,9 +6,23 @@ const aiChatSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  // New reference to Room document
+  roomRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Room',
+    required: false,
+    index: true
+  },
   userId: {
     type: String,
     required: false, // Anonymous users can also have chats
+    index: true
+  },
+  // New reference to User document
+  userRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
     index: true
   },
   sessionId: {
@@ -52,6 +66,27 @@ aiChatSchema.index({ lastActivity: 1 }); // For cleanup of old chats
 aiChatSchema.pre('save', function(next) {
   this.lastActivity = new Date();
   next();
+});
+
+// Pre-save to populate refs from string ids where possible
+aiChatSchema.pre('save', async function(next) {
+  try {
+    if (!this.roomRef && this.roomId) {
+      const Room = require('./room');
+      const room = await Room.findOne({ roomId: this.roomId });
+      if (room) this.roomRef = room._id;
+    }
+
+    if (!this.userRef && this.userId) {
+      const User = require('./user');
+      const user = await User.findOne({ username: this.userId }).catch(() => null);
+      if (user) this.userRef = user._id;
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Static method to cleanup old chats (older than 30 days)

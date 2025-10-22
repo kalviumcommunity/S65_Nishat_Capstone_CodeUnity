@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import codeunityLogo from '../assets/logo.png';
 import { FaLinkedin, FaGithub, FaInstagram, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
+import { Target, Rocket, Zap, Bot, Globe, Lock, Smartphone, Palette } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
 import { useUsageTracking } from '../hooks/useUsageTracking';
 
@@ -24,9 +25,7 @@ const Home = () => {
   const joinRoomRef = useRef(null);
   const aboutRef = useRef(null);
   const featuresRef = useRef(null);
-  const howToUseRef = useRef(null);
   const testimonialsRef = useRef(null);
-  const faqRef = useRef(null);
   const connectRef = useRef(null);
 
   // Authentication handlers
@@ -61,9 +60,7 @@ const Home = () => {
       const sectionMap = {
         'ABOUT': 'about-section',
         'FEATURES': 'features-section', 
-        'HOW TO USE': 'howto-section',
         'TESTIMONIALS': 'testimonials-section',
-        'FAQ': 'faq-section',
         'CONTACT': 'contact-section'
       };
       
@@ -120,9 +117,7 @@ const Home = () => {
       const sections = [
         { name: 'ABOUT', ref: aboutRef },
         { name: 'FEATURES', ref: featuresRef },
-        { name: 'HOW TO USE', ref: howToUseRef },
         { name: 'TESTIMONIALS', ref: testimonialsRef },
-        { name: 'FAQ', ref: faqRef },
         { name: 'CONTACT', ref: connectRef }
       ];
 
@@ -192,12 +187,12 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen relative bg-gray-900/80">
+    <div className="min-h-screen relative bg-black/90">
       {/* Navigation - Dynamic transparency based on scroll */}
       <nav 
-        className="sticky top-0 z-50 px-6 lg:px-12 py-6 border-b border-white/5 transition-all duration-300"
+        className="sticky top-0 z-50 px-6 lg:px-12 py-2"
         style={{
-          backgroundColor: `rgba(17, 24, 39, ${Math.min(0.95, 0.7 + scrollY * 0.001)})`,
+          backgroundColor: `rgba(0, 0, 0, ${Math.min(0.95, 0.7 + scrollY * 0.001)})`,
           backdropFilter: `blur(${Math.min(20, 12 + scrollY * 0.02)}px)`
         }}
       >
@@ -221,9 +216,7 @@ const Home = () => {
               { name: 'HOME', ref: null },
               { name: 'ABOUT', ref: aboutRef },
               { name: 'FEATURES', ref: featuresRef },
-              { name: 'HOW TO USE', ref: howToUseRef },
               { name: 'TESTIMONIALS', ref: testimonialsRef },
-              { name: 'FAQ', ref: faqRef },
               { name: 'CONTACT', ref: connectRef }
             ].map((item) => (
               <button
@@ -231,7 +224,7 @@ const Home = () => {
                 className={`text-xs font-semibold tracking-wider transition-all duration-300 ${
                   activeSection === item.name
                     ? 'text-white relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-0.5 after:bg-pink-500' 
-                    : 'text-gray-400 hover:text-white'
+                    : 'text-white/70 hover:text-white'
                 }`}
                 onClick={(e) => {
                   e.preventDefault();
@@ -246,13 +239,13 @@ const Home = () => {
             {/* Authentication Button */}
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                  <FaUser className="w-3 h-3 text-green-400" />
-                  <span className="text-xs text-green-300 font-medium">{user.username}</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-pink-500/30">
+                  <FaUser className="w-3 h-3 text-pink-400" />
+                  <span className="text-xs text-white font-medium">{user.username}</span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 hover:border-gray-500/30 text-gray-400 hover:text-gray-300 transition-all duration-200"
+                  className="p-2 rounded-lg bg-black/30 hover:bg-black/40 border border-pink-500/20 hover:border-pink-500/30 text-white/80 hover:text-white transition-all duration-200"
                   title="Logout"
                 >
                   <FaSignOutAlt className="w-3 h-3" />
@@ -263,7 +256,7 @@ const Home = () => {
                 onClick={() => setShowAuthModal(true)}
                 whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(236, 72, 153, 0.25)" }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500/15 to-purple-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500/15 to-pink-500/15 border border-pink-500/30 hover:border-pink-500/50 text-white hover:text-white transition-all duration-300 backdrop-blur-sm"
                 title="Sign In to CodeUnity"
               >
                 <div className="flex items-center gap-2">
@@ -308,17 +301,15 @@ const Home = () => {
               { name: 'HOME', ref: null },
               { name: 'ABOUT', ref: aboutRef },
               { name: 'FEATURES', ref: featuresRef },
-              { name: 'HOW TO USE', ref: howToUseRef },
               { name: 'TESTIMONIALS', ref: testimonialsRef },
-              { name: 'FAQ', ref: faqRef },
               { name: 'CONTACT', ref: connectRef }
             ].map((item) => (
               <button
                 key={item.name}
                 className={`block text-left text-sm font-medium transition-colors duration-300 ${
                   activeSection === item.name 
-                    ? 'text-pink-400 font-semibold' 
-                    : 'text-gray-300 hover:text-white'
+                    ? 'text-white font-semibold' 
+                    : 'text-white/70 hover:text-white'
                 }`}
                 onClick={(e) => {
                   e.preventDefault();
@@ -331,16 +322,16 @@ const Home = () => {
             ))}
             
             {/* Mobile Authentication */}
-            <div className="pt-2 border-t border-gray-700/30">
+            <div className="pt-2 border-t border-pink-500/20">
               {user ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FaUser className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-green-300">{user.username}</span>
+                    <FaUser className="w-4 h-4 text-pink-400" />
+                    <span className="text-sm text-white">{user.username}</span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 text-gray-400 hover:text-gray-300 transition-all duration-200"
+                    className="p-2 rounded-lg bg-black/30 hover:bg-black/40 border border-pink-500/20 text-white/80 hover:text-white transition-all duration-200"
                     title="Logout"
                   >
                     <FaSignOutAlt className="w-4 h-4" />
@@ -354,7 +345,7 @@ const Home = () => {
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-4 py-2.5 rounded-xl bg-linear-to-r from-pink-500/15 to-purple-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
+                  className="w-full px-4 py-2.5 rounded-xl bg-linear-to-r from-pink-500/15 to-pink-500/15 border border-pink-500/30 hover:border-pink-500/50 text-pink-400 hover:text-pink-300 transition-all duration-300 backdrop-blur-sm"
                 >
                   <div className="flex items-center gap-2">
                     <FaUser className="w-4 h-4" />
@@ -372,7 +363,7 @@ const Home = () => {
         {/* Modern Dark Background with Geometric Pattern */}
         <div className="absolute inset-0">
           {/* Base dark layer */}
-          <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-xl"></div>
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
           
           {/* Subtle grid pattern */}
           <div className="absolute inset-0 opacity-20">
@@ -396,373 +387,219 @@ const Home = () => {
             )`
           }}></div>
           
-          {/* Pink/Purple accent glows */}
+          {/* Pink accent glows */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-pink-500/15 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-pink-500/10 rounded-full blur-2xl"></div>
         </div>
 
-        {/* Hero Section - Center Aligned with Gradient Semi-Circle */}
+        {/* Hero Section - 2 Panel Layout */}
         <div className="relative z-10 px-6 lg:px-12 pt-20 pb-32 overflow-hidden">
-          {/* Gradient Semi-Circle Background */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-pink-600/40 via-purple-600/30 to-transparent rounded-full blur-3xl -z-10"></div>
+          {/* Gradient Background Effects */}
+          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-to-br from-pink-600/30 via-pink-600/20 to-transparent rounded-full blur-3xl -z-10"></div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-pink-600/25 via-pink-600/15 to-transparent rounded-full blur-3xl -z-10"></div>
 
-          <div className="max-w-4xl mx-auto relative z-10">
-            <div className="text-center space-y-6">
-              {/* Main Heading */}
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7 }}
-                className="text-6xl lg:text-7xl xl:text-8xl font-black leading-tight tracking-tight"
-              >
-                <span className="block text-white mb-2">Code Together.</span>
-                <span className="block text-transparent bg-clip-text bg-linear-to-r from-pink-700 via-purple-300 to-pink-900 mb-2">Build Faster.</span>
-                <span className="block text-white">With AI Power.</span>
-              </motion.h1>
-
-              {/* Description */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed"
-              >
-                Real-time code synchronization, AI-powered suggestions, and seamless team collaboration. Everything you need to build amazing projects together.
-              </motion.p>
-
-              {/* CTA Buttons */}
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              
+              {/* Left Panel - Hero Content */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.15 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7 }}
+                className="space-y-8"
               >
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={createRoom}
-                  className="px-10 py-4 rounded-lg bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 border border-pink-400/30 hover:border-pink-400/60 transition-all duration-300"
+                {/* Main Heading */}
+                <div className="space-y-4">
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.1 }}
+                    className="text-5xl lg:text-6xl xl:text-7xl font-black leading-tight tracking-tight"
+                  >
+                    <span className="block text-white">Code Together.</span>
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-pink-400 to-pink-500">
+                      Build Faster.
+                    </span>
+                    <span className="block text-white">With AI Power.</span>
+                  </motion.h1>
+
+                  {/* Description */}
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.2 }}
+                    className="text-base lg:text-lg text-white/80 leading-relaxed pt-4"
+                  >
+                    Real-time code synchronization, AI-powered suggestions, and seamless team collaboration. Everything you need to build amazing projects together.
+                  </motion.p>
+                </div>
+
+                {/* CTA Buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.3 }}
+                  className="flex flex-col sm:flex-row gap-4 pt-2"
                 >
-                  Start Building
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => joinRoomRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                  className="px-10 py-4 rounded-lg border-2 border-gray-600 text-gray-300 font-bold hover:bg-gray-900/50 hover:border-gray-500 transition-all duration-300"
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={createRoom}
+                    className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold shadow-lg shadow-pink-500/30 border border-pink-400/20 hover:border-pink-400/40 transition-all duration-300"
+                  >
+                    Start Building
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => joinRoomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                    className="px-8 py-3.5 rounded-xl border-2 border-pink-600/50 text-pink-300 font-bold hover:bg-black/50 hover:border-pink-500 transition-all duration-300"
+                  >
+                    Learn More
+                  </motion.button>
+                </motion.div>
+
+                {/* Stats */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.4 }}
+                  className="grid grid-cols-3 gap-6 pt-8 border-t border-pink-900/50"
                 >
-                  Join Room
-                </motion.button>
+                  <motion.div whileHover={{ y: -3 }} className="space-y-1">
+                    <div className="text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-300">50K+</div>
+                    <p className="text-xs text-white/50 uppercase tracking-wider">Users</p>
+                  </motion.div>
+                  <motion.div whileHover={{ y: -3 }} className="space-y-1">
+                    <div className="text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-300">10K+</div>
+                    <p className="text-xs text-white/50 uppercase tracking-wider">Projects</p>
+                  </motion.div>
+                  <motion.div whileHover={{ y: -3 }} className="space-y-1">
+                    <div className="text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-pink-300">100+</div>
+                    <p className="text-xs text-white/50 uppercase tracking-wider">Languages</p>
+                  </motion.div>
+                </motion.div>
               </motion.div>
 
-              {/* Stats */}
+              {/* Right Panel - Join Room Form */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.25 }}
-                className="grid grid-cols-3 gap-8 pt-16 border-t border-gray-800/50"
+                ref={joinRoomRef}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                className="relative"
               >
-                <motion.div whileHover={{ y: -5 }} className="space-y-2">
-                  <div className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-pink-400 to-pink-300">50K+</div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wider">Active Users</p>
-                </motion.div>
-                <motion.div whileHover={{ y: -5 }} className="space-y-2">
-                  <div className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-purple-300">10K+</div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wider">Live Projects</p>
-                </motion.div>
-                <motion.div whileHover={{ y: -5 }} className="space-y-2">
-                  <div className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-pink-300 to-purple-300">100+</div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wider">Languages</p>
-                </motion.div>
+                {/* Glowing effect behind form */}
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-pink-500/10 to-transparent rounded-3xl blur-2xl"></div>
+                
+                <div className="relative bg-black/60 backdrop-blur-2xl rounded-3xl p-8 lg:p-10 border border-pink-500/20 shadow-2xl">
+                  {/* Header */}
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/20 mb-4">
+                      <span className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></span>
+                      <span className="text-pink-300 text-xs font-medium">Start Coding Now</span>
+                    </div>
+                    <h2 className="text-3xl lg:text-4xl font-bold text-white mb-2">Join Room</h2>
+                    <p className="text-white/80 text-sm">Start collaborating with your team instantly</p>
+                  </div>
+                  
+                  {/* Form */}
+                  <div className="space-y-5">
+                    <div className="space-y-2">
+                      <label className="text-white/80 text-sm font-medium flex items-center gap-2">
+                        <span className="w-1 h-4 bg-gradient-to-b from-pink-500 to-pink-500 rounded-full"></span>
+                        Room ID
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter room identifier"
+                        value={roomId}
+                        onChange={(e) => setRoomId(e.target.value)}
+                        className="w-full px-4 py-3.5 rounded-xl bg-black/30 text-white placeholder-white/40 border border-pink-500/20 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-white/80 text-sm font-medium flex items-center gap-2">
+                        <span className="w-1 h-4 bg-gradient-to-b from-pink-500 to-pink-500 rounded-full"></span>
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter your username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full px-4 py-3.5 rounded-xl bg-black/30 text-white placeholder-white/40 border border-pink-500/20 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all"
+                      />
+                    </div>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(236, 72, 153, 0.25)" }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={joinRoom}
+                      className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold text-base transition-all duration-300 shadow-lg shadow-pink-500/20"
+                    >
+                      Join Room →
+                    </motion.button>
+                    
+                    {/* Divider */}
+                    <div className="relative py-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-pink-500/20"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="bg-black/60 px-3 text-white/60 text-xs">or</span>
+                      </div>
+                    </div>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={createRoom}
+                      className="w-full px-5 py-3.5 rounded-xl border border-pink-600/50 text-white font-semibold text-base hover:bg-black/50 hover:border-pink-500/50 transition-all duration-300"
+                    >
+                      Create New Room
+                    </motion.button>
+                  </div>
+
+                  {/* Trust indicators */}
+                  <div className="mt-6 pt-6 border-t border-pink-900/50">
+                    <div className="flex items-center justify-center gap-6 text-xs text-white/50">
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span>Secure</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                        </svg>
+                        <span>Collaborative</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span>AI-Powered</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </div>
           </div>
         </div>
-
-      {/* Join Room Section */}
-      <div className="relative z-10 px-6 lg:px-12 pb-24">
-        {/* Radial gradient background */}
-        <div className="absolute inset-0 bg-gradient-radial from-pink-400/12 via-transparent to-transparent opacity-60 rounded-3xl"></div>
-        <div className="max-w-lg mx-auto relative z-10">
-          <motion.div
-            ref={joinRoomRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="bg-gray-900/40 backdrop-blur-xl rounded-3xl p-10 border border-gray-700/30"
-          >
-            <div className="text-center mb-10">
-              <h2 className="text-4xl font-bold text-white mb-3">Join Room</h2>
-              <p className="text-gray-400 text-lg">Start collaborating with your team instantly</p>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <label className="text-gray-300 text-sm font-medium block">Room ID</label>
-                <input
-                  type="text"
-                  placeholder="Enter room identifier"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                  className="w-full px-5 py-4 rounded-2xl bg-black/40 text-white placeholder-gray-500 border border-gray-700/40 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all"
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <label className="text-gray-300 text-sm font-medium block">Username</label>
-                <input
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-5 py-4 rounded-2xl bg-black/40 text-white placeholder-gray-500 border border-gray-700/40 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all"
-                />
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(236, 72, 153, 0.3)" }}
-                whileTap={{ scale: 0.98 }}
-                onClick={joinRoom}
-                className="w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-lg transition-all duration-300"
-              >
-                Join Room →
-              </motion.button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-700/50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-gray-900/40 px-4 text-gray-500 text-sm">or</span>
-                </div>
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={createRoom}
-                className="w-full px-5 py-4 rounded-2xl border border-gray-600/40 text-gray-300 font-semibold text-lg hover:bg-gray-800/20 hover:border-gray-500 transition-all duration-300"
-              >
-                Create New Room
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
-      </div>
 
       {/* Additional Sections */}
       <div className="relative z-10 px-6 lg:px-12 pb-24">
         <div className="max-w-7xl mx-auto space-y-32">
           
-          {/* About Section */}
-          <div ref={aboutRef} id="about-section" className="text-center relative">
-            {/* Enhanced radial gradient background */}
-            <div className="absolute inset-0 bg-gradient-radial from-pink-400/12 via-purple-400/6 to-transparent opacity-60 rounded-3xl"></div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="relative z-10 space-y-16"
-            >
-              <div className="space-y-6">
-                <h2 className="text-4xl font-bold text-white">About CodeUnity</h2>
-                <p className="text-gray-400 text-lg max-w-4xl mx-auto leading-relaxed">
-                  CodeUnity is a revolutionary AI-powered collaborative coding platform that transforms how developers work together. 
-                  Built for the modern era of remote development, we bridge the gap between individual creativity and team productivity 
-                  through seamless real-time collaboration and intelligent code assistance.
-                </p>
-              </div>
-
-              {/* Mission & Vision */}
-              <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1, duration: 0.4 }}
-                  className="text-left"
-                >
-                  <div className="bg-gray-900/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/30 hover:border-pink-500/20 transition-all duration-300 h-full">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">🎯</span>
-                      </div>
-                      <h3 className="text-2xl font-bold text-white">Our Mission</h3>
-                    </div>
-                    <p className="text-gray-400 leading-relaxed">
-                      To democratize collaborative coding by providing developers worldwide with cutting-edge tools that enhance creativity, 
-                      boost productivity, and foster innovation. We believe that great code emerges when brilliant minds work together seamlessly, 
-                      regardless of geographical boundaries.
-                    </p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.15, duration: 0.4 }}
-                  className="text-left"
-                >
-                  <div className="bg-gray-900/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/30 hover:border-pink-500/20 transition-all duration-300 h-full">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">🚀</span>
-                      </div>
-                      <h3 className="text-2xl font-bold text-white">Our Vision</h3>
-                    </div>
-                    <p className="text-gray-400 leading-relaxed">
-                      To become the global standard for collaborative development environments, where every line of code written is enhanced by AI, 
-                      every collaboration is frictionless, and every developer can reach their full potential through the power of unified teamwork 
-                      and intelligent assistance.
-                    </p>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Key Benefits */}
-              <div className="space-y-12">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.15, duration: 0.4 }}
-                >
-                  <h3 className="text-3xl font-bold text-white mb-8">Why Choose CodeUnity?</h3>
-                  <div className="grid md:grid-cols-3 gap-8">
-                    {[
-                      {
-                        icon: "⚡",
-                        title: "Real-Time Synchronization",
-                        description: "Experience lightning-fast real-time code synchronization with zero conflicts. Watch your team's changes appear instantly with our advanced operational transformation algorithms."
-                      },
-                      {
-                        icon: "🤖",
-                        title: "AI-Powered Intelligence",
-                        description: "Leverage GitHub Copilot integration for intelligent code suggestions, automated debugging, and context-aware assistance that learns from your coding patterns."
-                      },
-                      {
-                        icon: "🌐",
-                        title: "Universal Language Support",
-                        description: "Support for 100+ programming languages with syntax highlighting, auto-completion, and language-specific optimizations for every major framework and library."
-                      },
-                      {
-                        icon: "🔒",
-                        title: "Enterprise Security",
-                        description: "Bank-grade encryption, secure room management, and privacy-first architecture ensure your code remains protected while enabling seamless collaboration."
-                      },
-                      {
-                        icon: "📱",
-                        title: "Cross-Platform Access",
-                        description: "Access your coding environment from any device with our responsive web interface, optimized for desktop development with mobile monitoring capabilities."
-                      },
-                      {
-                        icon: "🎨",
-                        title: "Beautiful Interface",
-                        description: "Stunning, distraction-free interface designed for developers, featuring customizable themes, intuitive layouts, and eye-friendly color schemes."
-                      }
-                    ].map((benefit, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.1 + index * 0.05, duration: 0.4 }}
-                        className="bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/30 hover:border-pink-500/20 transition-all duration-300 group"
-                      >
-                        <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                          {benefit.icon}
-                        </div>
-                        <h4 className="text-xl font-bold text-white mb-3">{benefit.title}</h4>
-                        <p className="text-gray-400 leading-relaxed text-sm">{benefit.description}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Technical Excellence */}
-              <div className="bg-gray-900/50 backdrop-blur-xl rounded-3xl p-12 border border-gray-700/30">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                  className="space-y-8"
-                >
-                  <h3 className="text-3xl font-bold text-white">Built with Modern Technology</h3>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {[
-                      {
-                        category: "Frontend",
-                        technologies: ["React 18", "Vite", "Tailwind CSS", "Framer Motion"]
-                      },
-                      {
-                        category: "Backend", 
-                        technologies: ["Node.js", "Express", "Socket.IO", "MongoDB"]
-                      },
-                      {
-                        category: "AI Integration",
-                        technologies: ["GitHub Copilot", "Monaco Editor", "Language Servers", "Code Analysis"]
-                      },
-                      {
-                        category: "Infrastructure",
-                        technologies: ["Real-time Sync", "Cloud Deployment", "CDN", "Load Balancing"]
-                      }
-                    ].map((tech, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3 + index * 0.05, duration: 0.4 }}
-                        className="text-center"
-                      >
-                        <h4 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-600 mb-4">
-                          {tech.category}
-                        </h4>
-                        <ul className="space-y-2">
-                          {tech.technologies.map((item, idx) => (
-                            <li key={idx} className="text-gray-400 text-sm">{item}</li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Call to Action */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4, duration: 0.4 }}
-                className="bg-gray-900/40 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/30"
-              >
-                <h3 className="text-2xl font-bold text-white mb-4">Ready to Transform Your Development Workflow?</h3>
-                <p className="text-gray-400 mb-6 leading-relaxed">
-                  Join thousands of developers who have revolutionized their coding experience with CodeUnity. 
-                  Start collaborating smarter, coding faster, and building better software today.
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={createRoom}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Start Coding Now →
-                </motion.button>
-              </motion.div>
-            </motion.div>
-          </div>
-
           {/* Features Section */}
           <div ref={featuresRef} id="features-section" className="text-center relative">
             {/* Enhanced radial gradient background */}
-            <div className="absolute inset-0 bg-gradient-radial from-pink-400/15 via-purple-400/8 to-transparent opacity-70 rounded-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-radial from-pink-400/15 via-pink-400/8 to-transparent opacity-70 rounded-3xl"></div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -786,7 +623,7 @@ const Home = () => {
 
               <div className="space-y-4">
                 <h2 className="text-5xl font-bold text-white">Core Features</h2>
-                <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                <p className="text-white/80 text-lg max-w-2xl mx-auto">
                   Discover the powerful tools that make CodeUnity the ultimate collaborative coding platform
                 </p>
               </div>
@@ -794,95 +631,168 @@ const Home = () => {
               <div className="grid md:grid-cols-3 gap-8">
                 {[
                   {
-                    icon: "⚡",
+                    icon: Zap,
+                    iconColor: "from-pink-400 to-pink-500",
                     title: "Real-time Collaboration",
                     description: "Code together seamlessly with perfect synchronization across all devices and team members"
                   },
                   {
-                    icon: "🤖",
+                    icon: Bot,
+                    iconColor: "from-pink-400 to-pink-500",
                     title: "AI-Powered Assistant",
                     description: "Get intelligent code suggestions, automated debugging, and context-aware assistance"
                   },
                   {
-                    icon: "🌐",
+                    icon: Globe,
+                    iconColor: "from-pink-400 to-pink-500",
                     title: "Multi-language Support",
                     description: "Support for 100+ programming languages with advanced syntax highlighting"
                   }
-                ].map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className="group bg-gray-900/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 hover:border-pink-500/30 transition-all duration-300"
-                  >
-                    <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
-                    <p className="text-gray-400 leading-relaxed">{feature.description}</p>
-                  </motion.div>
-                ))}
+                ].map((feature, index) => {
+                  const IconComponent = feature.icon;
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05, duration: 0.4 }}
+                      className="relative group bg-black/60 backdrop-blur-2xl rounded-3xl p-8 border border-pink-500/20 hover:border-pink-500/30 transition-all duration-300"
+                    >
+                      {/* Glowing effect */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${feature.iconColor} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-300`}></div>
+                      
+                      <div className="relative z-10 text-center">
+                        <div className="flex justify-center mb-6">
+                          <div className={`w-16 h-16 rounded-3xl bg-gradient-to-r ${feature.iconColor} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                            <IconComponent className="w-8 h-8 text-white" />
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
+                        <p className="text-white/80 leading-relaxed">{feature.description}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
 
-          {/* How to Use Section */}
-          <div ref={howToUseRef} id="howto-section" className="text-center relative">
-            {/* Radial gradient background */}
-            <div className="absolute inset-0 bg-gradient-radial from-pink-400/11 via-purple-400/5 to-transparent opacity-55 rounded-3xl"></div>
+          {/* Ready to Transform Section */}
+          <div className="text-center relative">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="relative bg-black/60 backdrop-blur-2xl rounded-3xl p-10 border border-pink-500/20 group"
+            >
+              {/* Glowing effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-pink-500/10 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <div className="relative z-10 text-center">
+                <h3 className="text-3xl font-bold text-white mb-4">Ready to Transform Your Development Workflow?</h3>
+                <p className="text-white/80 mb-8 leading-relaxed max-w-2xl mx-auto">
+                  Join thousands of developers who have revolutionized their coding experience with CodeUnity. 
+                  Start collaborating smarter, coding faster, and building better software today.
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={createRoom}
+                  className="px-10 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40 transition-all duration-300"
+                >
+                  Start Coding Now →
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* About Section */}
+          <div ref={aboutRef} id="about-section" className="text-center relative">
+            {/* Enhanced radial gradient background */}
+            <div className="absolute inset-0 bg-gradient-radial from-pink-400/12 via-pink-400/6 to-transparent opacity-60 rounded-3xl"></div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4 }}
-              className="relative z-10 space-y-12"
+              className="relative z-10 space-y-16"
             >
-              <h2 className="text-4xl font-bold text-white">How to Use CodeUnity</h2>
-              <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                {[
-                  {
-                    step: "01",
-                    title: "Create or Join Room",
-                    description: "Start by creating a new coding room or join an existing one with a room ID"
-                  },
-                  {
-                    step: "02", 
-                    title: "Invite Your Team",
-                    description: "Share the room ID with your team members to collaborate in real-time"
-                  },
-                  {
-                    step: "03",
-                    title: "Code Together",
-                    description: "Write, edit, and debug code together with AI assistance and live synchronization"
-                  }
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.08, duration: 0.4 }}
-                    className="relative"
-                  >
-                    <div className="bg-gray-900/40 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/30 hover:border-pink-500/20 transition-all duration-300">
-                      <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-600 mb-4">
-                        {item.step}
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-4">{item.title}</h3>
-                      <p className="text-gray-400 leading-relaxed">{item.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="space-y-6">
+                <h2 className="text-4xl font-bold text-white">About CodeUnity</h2>
+                <p className="text-white/80 text-lg max-w-4xl mx-auto leading-relaxed">
+                  CodeUnity is a revolutionary AI-powered collaborative coding platform that transforms how developers work together. 
+                  Built for the modern era of remote development, we bridge the gap between individual creativity and team productivity 
+                  through seamless real-time collaboration and intelligent code assistance.
+                </p>
               </div>
+
+              {/* Mission & Vision */}
+              <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                  className="text-left"
+                >
+                  <div className="relative bg-black/60 backdrop-blur-2xl rounded-3xl p-8 border border-pink-500/20 hover:border-pink-500/30 transition-all duration-300 h-full group">
+                    {/* Glowing effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-transparent to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-pink-500 to-pink-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                          <Target className="w-7 h-7 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">Our Mission</h3>
+                      </div>
+                      <p className="text-white/80 leading-relaxed">
+                        To democratize collaborative coding by providing developers worldwide with cutting-edge tools that enhance creativity, 
+                        boost productivity, and foster innovation. We believe that great code emerges when brilliant minds work together seamlessly, 
+                        regardless of geographical boundaries.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.15, duration: 0.4 }}
+                  className="text-left"
+                >
+                  <div className="relative bg-black/60 backdrop-blur-2xl rounded-3xl p-8 border border-pink-500/20 hover:border-pink-500/30 transition-all duration-300 h-full group">
+                    {/* Glowing effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-transparent to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-pink-500 to-pink-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                          <Rocket className="w-7 h-7 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">Our Vision</h3>
+                      </div>
+                      <p className="text-white/80 leading-relaxed">
+                        To become the global standard for collaborative development environments, where every line of code written is enhanced by AI, 
+                        every collaboration is frictionless, and every developer can reach their full potential through the power of unified teamwork 
+                        and intelligent assistance.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              
             </motion.div>
           </div>
 
           {/* Testimonials Section */}
           <div ref={testimonialsRef} id="testimonials-section" className="text-center relative">
             {/* Enhanced radial gradient background */}
-            <div className="absolute inset-0 bg-gradient-radial from-pink-400/14 via-purple-400/7 to-transparent opacity-65 rounded-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-radial from-pink-400/14 via-pink-400/7 to-transparent opacity-65 rounded-3xl"></div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -891,49 +801,55 @@ const Home = () => {
               className="relative z-10 space-y-12"
             >
               <h2 className="text-5xl font-bold text-white">What Developers Say</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
                   {
                     name: "Sarah Chen",
                     role: "Senior Frontend Developer",
                     company: "TechCorp",
                     quote: "CodeUnity has revolutionized how our team collaborates. The AI assistance is incredibly helpful!",
-                    rating: 5
+                    rating: 5,
+                    gradient: "from-pink-500/10 to-pink-500/10"
                   },
                   {
                     name: "Marcus Rodriguez", 
                     role: "Full Stack Engineer",
                     company: "StartupLab",
                     quote: "Real-time collaboration has never been this smooth. It's like having the whole team in one room.",
-                    rating: 5
+                    rating: 5,
+                    gradient: "from-pink-500/10 to-pink-500/10"
                   },
                   {
                     name: "Emily Johnson",
                     role: "DevOps Engineer", 
                     company: "CloudTech",
                     quote: "The AI-powered suggestions have saved us countless hours of debugging. Absolutely love it!",
-                    rating: 5
+                    rating: 5,
+                    gradient: "from-pink-500/10 to-pink-500/10"
                   },
                   {
                     name: "David Kim",
                     role: "Backend Developer",
                     company: "DataFlow",
                     quote: "Perfect for remote teams. The synchronization is flawless and the interface is intuitive.",
-                    rating: 5
+                    rating: 5,
+                    gradient: "from-pink-500/10 to-pink-500/10"
                   },
                   {
                     name: "Lisa Thompson",
                     role: "Mobile Developer",
                     company: "AppStudio",
                     quote: "CodeUnity has become an essential tool for our development workflow. Highly recommended!",
-                    rating: 5
+                    rating: 5,
+                    gradient: "from-pink-500/10 to-pink-500/10"
                   },
                   {
                     name: "Alex Morgan",
                     role: "Tech Lead",
                     company: "InnovateLab",
                     quote: "The best collaborative coding platform I've used. The AI features are game-changing.",
-                    rating: 5
+                    rating: 5,
+                    gradient: "from-pink-500/10 to-pink-500/10"
                   }
                 ].map((testimonial, index) => (
                   <motion.div
@@ -942,18 +858,23 @@ const Home = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className="bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/30 hover:border-pink-500/20 transition-all duration-300"
+                    className="relative group bg-black/60 backdrop-blur-2xl rounded-3xl p-6 border border-pink-500/20 hover:border-pink-500/30 transition-all duration-300"
                   >
-                    <div className="flex justify-center mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <span key={i} className="text-yellow-400 text-xl">★</span>
-                      ))}
-                    </div>
-                    <p className="text-white/80 mb-6 italic">"{testimonial.quote}"</p>
-                    <div className="text-center">
-                      <h4 className="text-white font-semibold">{testimonial.name}</h4>
-                      <p className="text-white/60 text-sm">{testimonial.role}</p>
-                      <p className="text-cyan-400 text-sm">{testimonial.company}</p>
+                    {/* Glowing effect */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity duration-300`}></div>
+                    
+                    <div className="relative z-10">
+                      <div className="flex justify-center mb-4">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <span key={i} className="text-white/80 text-xl">★</span>
+                        ))}
+                      </div>
+                      <p className="text-white/80 mb-6 italic leading-relaxed">"{testimonial.quote}"</p>
+                      <div className="text-center pt-4 border-t border-pink-900/50">
+                        <h4 className="text-white font-semibold">{testimonial.name}</h4>
+                        <p className="text-white/60 text-sm">{testimonial.role}</p>
+                        <p className="text-white/80 text-sm font-medium">{testimonial.company}</p>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -961,118 +882,14 @@ const Home = () => {
             </motion.div>
           </div>
 
-          {/* FAQ Section */}
-          <div ref={faqRef} id="faq-section" className="text-center relative">
-            {/* Radial gradient background */}
-            <div className="absolute inset-0 bg-gradient-radial from-pink-400/10 via-transparent to-transparent opacity-50 rounded-3xl"></div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="relative z-10 space-y-8"
-            >
-              <h2 className="text-4xl font-bold text-white">Frequently Asked Questions</h2>
-              <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-4">
-                {[
-                  {
-                    question: "How many people can collaborate in one room?",
-                    answer: "CodeUnity supports up to 50 concurrent users in a single room, making it perfect for teams of any size."
-                  },
-                  {
-                    question: "What programming languages are supported?",
-                    answer: "We support over 100 programming languages including JavaScript, Python, Java, C++, React, Node.js, and many more."
-                  },
-                  {
-                    question: "Is my code secure and private?",
-                    answer: "Yes! All code is encrypted in transit and at rest. We use enterprise-grade security to protect your intellectual property."
-                  },
-                  {
-                    question: "Can I use CodeUnity for free?",
-                    answer: "Yes, we offer a free tier with basic features. Premium plans are available for advanced AI features and larger teams."
-                  },
-                  {
-                    question: "Does CodeUnity work offline?",
-                    answer: "CodeUnity requires an internet connection for real-time collaboration, but you can work locally and sync when reconnected."
-                  },
-                  {
-                    question: "How does the AI assistance work?",
-                    answer: "Our AI analyzes your code in real-time to provide suggestions, detect bugs, optimize performance, and help with documentation."
-                  }
-                ].map((faq, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.04, duration: 0.3 }}
-                    className="bg-gray-900/40 backdrop-blur-xl rounded-2xl p-5 border border-gray-700/30 hover:border-pink-500/20 transition-all duration-300 text-left"
-                  >
-                    <h3 className="text-base font-semibold text-white mb-2">{faq.question}</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">{faq.answer}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Contact Section */}
-          <div ref={connectRef} id="contact-section" className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="space-y-8"
-            >
-              <h2 className="text-4xl font-bold text-white">Connect With Us</h2>
-              <div className="flex justify-center gap-6">
-                <motion.a
-                  href="mailto:nishatayub702@gmail.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  className="w-12 h-12 bg-white/10 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/20 hover:bg-white/20 transition-colors"
-                >
-                  <MdEmail className="text-xl text-white" />
-                </motion.a>
-                <motion.a
-                  href="https://linkedin.com/in/nishatayub"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  className="w-12 h-12 bg-white/10 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/20 hover:bg-white/20 transition-colors"
-                >
-                  <FaLinkedin className="text-xl text-white" />
-                </motion.a>
-                <motion.a
-                  href="https://github.com/nishatayub"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  className="w-12 h-12 bg-white/10 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/20 hover:bg-white/20 transition-colors"
-                >
-                  <FaGithub className="text-xl text-white" />
-                </motion.a>
-                <motion.a
-                  href="https://instagram.com/nishatayub"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  className="w-12 h-12 bg-white/10 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/20 hover:bg-white/20 transition-colors"
-                >
-                  <FaInstagram className="text-xl text-white" />
-                </motion.a>
-              </div>
-            </motion.div>
-          </div>
+          
 
         </div>
       </div>
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 bg-gray-900/80 backdrop-blur-xl border-t border-gray-800/50">
+      <footer className="relative z-10 bg-black/90 backdrop-blur-xl border-t border-pink-900/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-12">
             
@@ -1090,12 +907,12 @@ const Home = () => {
                 <span className="text-white font-bold text-xl tracking-tight">CODE UNITY</span>
               </motion.div>
               
-              <blockquote className="text-gray-400 italic text-sm leading-relaxed">
+              <blockquote className="text-white/80 italic text-sm leading-relaxed">
                 "Code is like humor. When you have to explain it, it's bad."<br />
                 <span className="text-pink-400 not-italic font-medium">- Cory House</span>
               </blockquote>
               
-              <p className="text-gray-500 text-sm leading-relaxed">
+              <p className="text-white/70 text-sm leading-relaxed">
                 Empowering developers worldwide with AI-enhanced collaborative coding solutions. 
                 Building the future of software development, one line of code at a time.
               </p>
@@ -1108,14 +925,13 @@ const Home = () => {
                 {[
                   { name: 'Home', ref: null },
                   { name: 'Features', ref: featuresRef },
-                  { name: 'How to Use', ref: howToUseRef },
                   { name: 'Testimonials', ref: testimonialsRef },
-                  { name: 'FAQ', ref: faqRef }
+                  { name: 'Contact', ref: connectRef }
                 ].map((link, index) => (
                   <li key={index}>
                     <motion.button
                       onClick={() => link.ref ? scrollToSection(link.ref) : window.scrollTo({ top: 0, behavior: 'smooth' })}
-                      className="text-gray-400 hover:text-pink-400 transition-colors text-sm"
+                      className="text-white/70 hover:text-white transition-colors text-sm"
                       whileHover={{ x: 5 }}
                     >
                       {link.name}
@@ -1137,7 +953,7 @@ const Home = () => {
                   'Team Management',
                   'Version Control'
                 ].map((feature, index) => (
-                  <li key={index} className="text-gray-400 text-sm">
+                  <li key={index} className="text-white/70 text-sm">
                     {feature}
                   </li>
                 ))}
@@ -1152,14 +968,14 @@ const Home = () => {
               <div className="space-y-4">
                 <motion.a
                   href="mailto:nishatayub702@gmail.com"
-                  className="flex items-center gap-3 text-gray-400 hover:text-pink-400 transition-colors"
+                  className="flex items-center gap-3 text-white/70 hover:text-white transition-colors"
                   whileHover={{ x: 5 }}
                 >
                   <MdEmail className="text-lg" />
                   <span className="text-sm">nishatayub702@gmail.com</span>
                 </motion.a>
                 
-                <div className="flex items-center gap-3 text-gray-400">
+                <div className="flex items-center gap-3 text-white/70">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
@@ -1169,34 +985,34 @@ const Home = () => {
 
               {/* Social Links */}
               <div>
-                <p className="text-gray-500 text-sm mb-4">Follow us on social media</p>
+                <p className="text-white/70 text-sm mb-4">Follow us on social media</p>
                 <div className="flex gap-4">
                   <motion.a
                     href="https://linkedin.com/in/nishatayub"
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.1, y: -2 }}
-                    className="w-10 h-10 bg-gray-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-gray-700/50 hover:bg-blue-600/20 hover:border-blue-400/50 transition-all"
+                    className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-pink-500/20 hover:bg-pink-600/20 hover:border-pink-400/50 transition-all"
                   >
-                    <FaLinkedin className="text-lg text-gray-300" />
+                    <FaLinkedin className="text-lg text-white/80" />
                   </motion.a>
                   <motion.a
                     href="https://github.com/nishatayub"
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.1, y: -2 }}
-                    className="w-10 h-10 bg-gray-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-gray-700/50 hover:bg-gray-600/20 hover:border-gray-400/50 transition-all"
+                    className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-pink-500/20 hover:bg-pink-600/20 hover:border-pink-400/50 transition-all"
                   >
-                    <FaGithub className="text-lg text-gray-300" />
+                    <FaGithub className="text-lg text-white/80" />
                   </motion.a>
                   <motion.a
                     href="https://instagram.com/nishatayub"
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.1, y: -2 }}
-                    className="w-10 h-10 bg-gray-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-gray-700/50 hover:bg-pink-600/20 hover:border-pink-400/50 transition-all"
+                    className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-pink-500/20 hover:bg-pink-600/20 hover:border-pink-400/50 transition-all"
                   >
-                    <FaInstagram className="text-lg text-gray-300" />
+                    <FaInstagram className="text-lg text-white/80" />
                   </motion.a>
                 </div>
               </div>
@@ -1204,20 +1020,20 @@ const Home = () => {
           </div>
 
           {/* Footer Bottom */}
-          <div className="border-t border-gray-800/50 mt-12 pt-8">
+          <div className="border-t border-pink-900/50 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-gray-500 text-sm">
+              <div className="text-white/70 text-sm">
                 © 2024 CodeUnity. All rights reserved. Built with ❤️ for developers.
               </div>
               
               <div className="flex gap-6 text-sm">
-                <a href="#" className="text-gray-500 hover:text-pink-400 transition-colors">
+                <a href="#" className="text-white/70 hover:text-white transition-colors">
                   Privacy Policy
                 </a>
-                <a href="#" className="text-gray-500 hover:text-pink-400 transition-colors">
+                <a href="#" className="text-white/70 hover:text-white transition-colors">
                   Terms of Service
                 </a>
-                <a href="#" className="text-gray-500 hover:text-pink-400 transition-colors">
+                <a href="#" className="text-white/70 hover:text-white transition-colors">
                   Cookie Policy
                 </a>
               </div>

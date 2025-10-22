@@ -1,8 +1,3 @@
-/**
- * Redis Cache Configuration
- * Provides caching layer for improved performance
- */
-
 const redis = require('redis');
 
 let redisClient = null;

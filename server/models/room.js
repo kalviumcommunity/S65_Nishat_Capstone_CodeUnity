@@ -6,9 +6,17 @@ const RoomSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  // Keep existing username string for backwards compatibility
   createdBy: {
     type: String,
     required: true, // Username of room creator
+  },
+  // Reference to the User document (ObjectId). Optional.
+  createdById: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
+    index: true
   },
   createdAt: {
     type: Date,
@@ -53,6 +61,7 @@ const RoomSchema = new mongoose.Schema({
 });
 
 RoomSchema.index({ createdBy: 1 });
+RoomSchema.index({ createdById: 1 });
 RoomSchema.index({ 'participants.username': 1 });
 
 // Instance methods
@@ -108,5 +117,19 @@ RoomSchema.statics.createRoom = function(roomId, createdBy, settings = {}) {
     participants: [{ username: createdBy, isActive: true }]
   });
 };
+// Ensure createdById is populated from username when possible
+RoomSchema.pre('save', async function(next) {
+  try {
+    if (!this.createdById && this.createdBy) {
+      // lazy require to avoid potential circular deps
+      const User = require('./user');
+      const user = await User.findOne({ username: this.createdBy });
+      if (user) this.createdById = user._id;
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = mongoose.model('Room', RoomSchema);

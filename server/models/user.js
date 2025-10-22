@@ -32,12 +32,6 @@ const UserSchema = new mongoose.Schema({
       username: String,
       email: String,
       avatar_url: String
-    },
-    discord: {
-      id: String,
-      username: String,
-      email: String,
-      avatar: String
     }
   },
   // User preferences
